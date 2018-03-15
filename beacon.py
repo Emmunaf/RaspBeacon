@@ -297,12 +297,10 @@ class BeaconPi(object):
 
         return result
 
-    @staticmethod
     def get_companyid(self, pkt):
         return (struct.unpack("<B", pkt[1])[0] << 8) | \
             struct.unpack("<B", pkt[0])[0]
 
-    @staticmethod
     def verify_beacon_packet(self, report):
         result = False
         # check payload length (31byte)
