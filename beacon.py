@@ -298,8 +298,8 @@ class BeaconPi(object):
         return result
 
     def get_companyid(self, pkt):
-        return (struct.unpack("<B", pkt[1])[0] << 8) | \
-            struct.unpack("<B", pkt[0])[0]
+        return (struct.unpack("<B", bytes(pkt[1]))[0] << 8) | \
+            struct.unpack("<B", bytes(pkt[0]))[0]
 
     def verify_beacon_packet(self, report):
         result = False
