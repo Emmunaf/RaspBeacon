@@ -143,7 +143,7 @@ class BeaconPi(object):
             and possibly additional key/value pairs that represent the parsed content
             of the packet.
         """
-
+        print("hci_le_parse_event called")
         result = {}
         hci_packet_type, event, param_len = struct.unpack("<BBB", pkt[:3])
         result["packet_type"] = hci_packet_type
