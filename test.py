@@ -4,5 +4,7 @@ sock = a.open_socket()
 a.hci_le_set_scan_parameters()
 a.start_le_scan()
 print("Le scan enabled")
-a.parse_events(5)
+while True:
+    a.parse_events(5)
+    
 
