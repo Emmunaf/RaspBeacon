@@ -278,10 +278,10 @@ class BeaconPi(object):
                     # Parse the payload
                 print("----------MAJOOOOOOOOOOOR-------------\n")
                 print(pkt)
-                print(self.packet_as_hex_string(pkt[report_pkt_offset - 8: report_pkt_offset - 6], True, True))
-                major = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
-                minor = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
+                major, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
+                minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 print(major, minor)
+                print(self.verify_beacon_packet(report))
                 #print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
                 #print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
                 #print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
@@ -293,14 +293,38 @@ class BeaconPi(object):
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
             rssi, = struct.unpack("<b", bytes([pkt[report_pkt_offset - 1]]))
             report["rssi"] = rssi
-            # TEST TEST
-            print(self.packet_as_hex_string(pkt[report_pkt_offset - 8: report_pkt_offset - 6], True, True))
-            major = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
-            minor = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
-            print(major, minor)
-            #END TEST TEST
             result["advertising_reports"].append(report)
 
+        return result
+
+    @staticmethod
+    def get_companyid(self, pkt):
+        return (struct.unpack("<B", pkt[1])[0] << 8) | \
+            struct.unpack("<B", pkt[0])[0]
+
+    @staticmethod
+    def verify_beacon_packet(self, report):
+        result = False
+        # check payload length (31byte)
+        ADV_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF
+        COMPANY_ID = 0x8888
+        if (report["report_metadata_length"] != 31):
+            return result
+        # check Company ID (LEL = 0x8888)
+        if (struct.unpack("<B", report["payload_binary"][4])[0] !=
+                ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
+            return result
+        if (self.get_companyid(report["payload_binary"][5:7]) != COMPANY_ID):
+            return result
+        # check shortened local name ("IM")
+        '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
+                ADV_TYPE_SHORT_LOCAL_NAME):
+            return result
+        if ((report["payload_binary"][29:31] != "IM") and
+                (report["payload_binary"][29:31] != "EP")):
+            return result
+'''
+        result = True
         return result
 
     def parse_events(self, loop_count=10):
