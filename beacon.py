@@ -279,6 +279,8 @@ class BeaconPi(object):
 
     def parse_events(self, loop_count=10):
         pkt = self.hci_sock.recv(255)
+        print("parse_events")
+        print(pkt)
         # Raw avertise packet data from Bluez scan
         # Packet Type (1byte) + BT Event ID (1byte) + Packet Length (1byte) +
         # BLE sub-Event ID (1byte) + Number of Advertising reports (1byte) +
