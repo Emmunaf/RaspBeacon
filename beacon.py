@@ -196,7 +196,7 @@ class BeaconPi(object):
 
     def _handle_le_meta_event(self, pkt):
         result = {}
-        subevent, = struct.unpack("B", bytes(pkt[0]))
+        subevent, = struct.unpack("B", bytes([pkt[0]]))
         result["bluetooth_le_subevent_id"] = subevent
         pkt = pkt[1:]
         if subevent == EVT_LE_ADVERTISING_REPORT:
@@ -223,17 +223,17 @@ class BeaconPi(object):
 
     def _handle_le_advertising_report(self, pkt):
         result = {}
-        num_reports = struct.unpack("<B", pkt[0])[0]
+        num_reports = struct.unpack("<B", bytes([pkt[0]]))[0]
         report_pkt_offset = 0
         result["number_of_advertising_reports"] = num_reports
         result["advertising_reports"] = []
         
         for i in range(0, num_reports):
             report = {}
-            report_event_type = struct.unpack("<B", pkt[report_pkt_offset + 1])[0]
+            report_event_type = struct.unpack("<B", bytes([pkt[report_pkt_offset + 1]]))[0]
             report["report_type_id"] = report_event_type
 
-            bdaddr_type = struct.unpack("<B", pkt[report_pkt_offset + 2])[0]
+            bdaddr_type = struct.unpack("<B", bytes([pkt[report_pkt_offset + 2]]))[0]
             report["peer_bluetooth_address_type"] = bdaddr_type
 
             device_addr = self.packed_bdaddr_to_string(
@@ -242,7 +242,7 @@ class BeaconPi(object):
             report["peer_bluetooth_address_s"] = \
                 self.space_bt_address(report["peer_bluetooth_address"])
 
-            report_data_length, = struct.unpack("<B", pkt[report_pkt_offset + 9])
+            report_data_length, = struct.unpack("<B", bytes([pkt[report_pkt_offset + 9]]))
             report["report_metadata_length"] = report_data_length
 
             if report_event_type == ADV_IND:
@@ -274,7 +274,7 @@ class BeaconPi(object):
             # Each report length is (2 (event type, bdaddr type) + 6 (the address)
             #    + 1 (data length field) + data length + 1 (rssi)) bytes long.
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
-            rssi, = struct.unpack("<b", pkt[report_pkt_offset - 1])
+            rssi, = struct.unpack("<b", bytes([pkt[report_pkt_offset - 1]]))
             report["rssi"] = rssi
             result["advertising_reports"].append(report)
 
