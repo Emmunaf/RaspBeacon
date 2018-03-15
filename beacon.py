@@ -63,11 +63,16 @@ class BeaconPi(object):
     @staticmethod
     def printpacket(pkt):
         """Print the packet in readable hex format"""
-
+        ret_str = ""
         for byte in pkt:
-            sys.stdout.write("%02x " % struct.unpack("B", bytes([byte]))[0])
-        print()
+            ret_str += ("%02x " % struct.unpack("B", bytes([byte]))[0])
+        return(ret_str)
         # print("%02x " %i for i in struct.unpack("B", bytes([byte])))
+
+    @staticmethod
+    def packet2str(pkt):
+        """TODO the packet in readable hex format"""
+        return("%02x " %byte for byte in struct.unpack("B", bytes([byte])))
 
 
     def start_le_scan(self):
@@ -271,11 +276,14 @@ class BeaconPi(object):
                 report["payload"] = self.packet_as_hex_string(
                     report["payload_binary"], True, True)
                     # Parse the payload
-                print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
-                print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
-                print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
+                major = struct.unpack("<BB", bytes(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
+                minor = struct.unpack("<BB", bytes(pkt[report_pkt_offset - 4: report_pkt_offset - 2]))
+                print(major, minor)
+                #print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
+                #print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
+                #print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 # commented out - don't know what this byte is.  It's NOT TXPower
-                txpower, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
+                txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
                 print("(Unknown):", txpower)
             # Each report length is (2 (event type, bdaddr type) + 6 (the address)
             #    + 1 (data length field) + data length + 1 (rssi)) bytes long.
