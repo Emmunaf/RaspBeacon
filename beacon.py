@@ -276,8 +276,8 @@ class BeaconPi(object):
                 report["payload"] = self.packet_as_hex_string(
                     report["payload_binary"], True, True)
                     # Parse the payload
-                major = struct.unpack("<H", pkt[report_pkt_offset - 6: report_pkt_offset - 4])
-                minor = struct.unpack("<H", pkt[report_pkt_offset - 4: report_pkt_offset - 2])
+                major = struct.unpack(">H", pkt[report_pkt_offset - 6: report_pkt_offset - 4])
+                minor = struct.unpack(">H", pkt[report_pkt_offset - 4: report_pkt_offset - 2])
                 print(major, minor)
                 #print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
                 #print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
