@@ -86,7 +86,6 @@ class BeaconPi(object):
         """
 
         # hci_sock = self.hci_sock
-        print(LE_Scan_Enable)
         if LE_Scan_Enable != 0x00 and LE_Scan_Enable != 0x01:
             raise ValueError("The argument enable_byte can assume just two values: 0x01 or 0x00")
         # Create the structure needed for the parameters of the LE SET SCAN ENABLE hci command
@@ -311,7 +310,7 @@ class BeaconPi(object):
         # * Maximum Data Length of an advertising packet = 0x1F
         debug = True
         parsed_packet = self.hci_le_parse_event(pkt)
-
+        print(parsed_packet)
         if "bluetooth_le_subevent_name" in parsed_packet and \
                 (parsed_packet["bluetooth_le_subevent_name"]
                     == 'EVT_LE_ADVERTISING_REPORT'):
