@@ -281,6 +281,12 @@ class BeaconPi(object):
         return result
 
     def parse_events(self, hci_sock, loop_count=10):
+        # Save the current filter, for restoring later.
+        old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
+        flt = bluez.hci_filter_new()
+        bluez.hci_filter_all_events(flt)
+        bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
+        self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
         print("Waiting for socket")
         pkt = hci_sock.recv(255)
         print("parse_events")
@@ -339,7 +345,8 @@ class BeaconPi(object):
                 #if (self.verify_smart_beacon_packet(report)):
                     #If match our format we should do something
                     pass
-
+        self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
+        
     def parse_events2(self, loop_count=100):
         return True
         # Save the current filter, for restoring later.
