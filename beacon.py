@@ -151,6 +151,7 @@ class BeaconPi(object):
         result["packet_length"] = param_len
         result["full_packet_str"] = self.packet_as_hex_string(pkt)
         result["full_packet_bin"] = pkt
+        print(result)
 
         # We check only for BLE events
         if event == LE_META_EVENT:
