@@ -293,6 +293,12 @@ class BeaconPi(object):
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
             rssi, = struct.unpack("<b", bytes([pkt[report_pkt_offset - 1]]))
             report["rssi"] = rssi
+            # TEST TEST
+            print(self.packet_as_hex_string(pkt[report_pkt_offset - 8: report_pkt_offset - 6], True, True))
+            major = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
+            minor = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
+            print(major, minor)
+            #END TEST TEST
             result["advertising_reports"].append(report)
 
         return result
