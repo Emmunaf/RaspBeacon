@@ -56,6 +56,8 @@ class BeaconPi(object):
 
     def open_socket(self):
         self.hci_sock = bluez.hci_open_dev(self.device_id)
+        print("socket opened")
+        print(self.hci_sock)
 
     @staticmethod
     def printpacket(pkt):
