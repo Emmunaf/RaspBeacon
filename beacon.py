@@ -271,12 +271,12 @@ class BeaconPi(object):
                 report["payload"] = self.packet_as_hex_string(
                     report["payload_binary"], True, True)
                     # Parse the payload
-                print("\tMAJOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
-                print("\tMINOR: ", self.printpacket(pkt[report_pkt_offset - 4: report_pkt_offset - 2]))
-                print("\tMAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
+                print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
+                print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
+                print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 # commented out - don't know what this byte is.  It's NOT TXPower
                 txpower, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
-                print("\t(Unknown):", txpower)
+                print("(Unknown):", txpower)
             # Each report length is (2 (event type, bdaddr type) + 6 (the address)
             #    + 1 (data length field) + data length + 1 (rssi)) bytes long.
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
