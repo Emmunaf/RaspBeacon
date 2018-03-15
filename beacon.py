@@ -309,10 +309,10 @@ class BeaconPi(object):
         if (report["report_metadata_length"] != 31):
             return result
         # check Company ID (LEL = 0x8888)
-        if (struct.unpack("<B", report["payload_binary"][4])[0] !=
+        if (struct.unpack("<B", bytes([report["payload_binary"][4]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
-        if (self.get_companyid(report["payload_binary"][5:7]) != COMPANY_ID):
+        if (self.get_companyid(bytes(report["payload_binary"][5:7])) != COMPANY_ID):
             return result
         # check shortened local name ("IM")
         '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
