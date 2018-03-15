@@ -277,7 +277,64 @@ class BeaconPi(object):
 
         return result
 
-    def parse_events(self, loop_count=100):
+    def parse_events(self, loop_count=10):
+        pkt = self.hci_sock.recv(255)
+        # Raw avertise packet data from Bluez scan
+        # Packet Type (1byte) + BT Event ID (1byte) + Packet Length (1byte) +
+        # BLE sub-Event ID (1byte) + Number of Advertising reports (1byte) +
+        # Report type ID (1byte) + BT Address Type (1byte) + BT Address (6byte) +
+        # Data Length (1byte) + Data ((Data Length)byte) + RSSI (1byte)
+        #
+        # Packet Type = 0x04
+        # BT Event ID = EVT_LE_META_EVENT = 0x3E (BLE events)
+        # (All LE commands result in a metaevent, specified by BLE sub-Event ID)
+        # BLE sub-Event ID = {
+        #                       EVT_LE_CONN_COMPLETE = 0x01
+        #                       EVT_LE_ADVERTISING_REPORT = 0x02
+        #                       EVT_LE_CONN_UPDATE_COMPLETE = 0x03
+        #                       EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE = 0x04
+        #                       EVT_LE_LTK_REQUEST = 0x05
+        #                     }
+        # Number of Advertising reports = 0x01 (normally)
+        # Report type ID = {
+        #                       LE_ADV_IND = 0x00
+        #                       LE_ADV_DIRECT_IND = 0x01
+        #                       LE_ADV_SCAN_IND = 0x02
+        #                       LE_ADV_NONCONN_IND = 0x03
+        #                       LE_ADV_SCAN_RSP = 0x04
+        #                   }
+        # BT Address Type = {
+        #                       LE_PUBLIC_ADDRESS = 0x00
+        #                       LE_RANDOM_ADDRESS = 0x01
+        #                    }
+        # Data Length = 0x00 - 0x1F
+        # * Maximum Data Length of an advertising packet = 0x1F
+        debug = True
+        parsed_packet = self.hci_le_parse_event(pkt)
+
+        if "bluetooth_le_subevent_name" in parsed_packet and \
+                (parsed_packet["bluetooth_le_subevent_name"]
+                    == 'EVT_LE_ADVERTISING_REPORT'):
+
+            if debug:
+                for report in parsed_packet["advertising_reports"]:
+                    print("----------------------------------------------------")
+                    print("Found BLE device:", report['peer_bluetooth_address'])
+                    print("Raw Advertising Packet:")
+                    print(self.packet_as_hex_string(pkt, True, True))
+                    print("")
+                    for k, v in report.items():
+                        if k == "payload_binary":
+                            continue
+                        print("\t%s: %s" % (k, v))
+                    print("")
+
+            for report in parsed_packet["advertising_reports"]:
+                #if (self.verify_smart_beacon_packet(report)):
+                    #If match our format we should do something
+                    pass
+
+    def parse_events2(self, loop_count=100):
         return True
         # Save the current filter, for restoring later.
         old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
