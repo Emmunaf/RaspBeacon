@@ -429,7 +429,7 @@ class BeaconPi(object):
         space = ""
         if (spacing):
             space = " "
-        for b in pkt as byte:
+        for b in pkt:
             packet = packet + "%02x" % struct.unpack("<B", bytes(b))[0] + space
         if (capitalize):
             packet = packet.upper()
