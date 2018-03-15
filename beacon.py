@@ -284,7 +284,7 @@ class BeaconPi(object):
                 #print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 # commented out - don't know what this byte is.  It's NOT TXPower
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
-                print("(Unknown):", txpower)
+                #print("(Unknown):", txpower)
             # Each report length is (2 (event type, bdaddr type) + 6 (the address)
             #    + 1 (data length field) + data length + 1 (rssi)) bytes long.
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
