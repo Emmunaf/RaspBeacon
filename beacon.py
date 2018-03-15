@@ -278,6 +278,7 @@ class BeaconPi(object):
         return result
 
     def parse_events(self, loop_count=10):
+        print("Waiting for socket")
         pkt = self.hci_sock.recv(255)
         print("parse_events")
         print(pkt)
