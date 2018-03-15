@@ -58,6 +58,7 @@ class BeaconPi(object):
         self.hci_sock = bluez.hci_open_dev(self.device_id)
         print("socket opened")
         print(self.hci_sock)
+        return self.hci_sock()
 
     @staticmethod
     def printpacket(pkt):
@@ -107,7 +108,7 @@ class BeaconPi(object):
         Own_Address_Type = 0x01  # 0x01 - Random Device Address, 0x00 - Public Device Address (default)
         Scanning_Filter_Policy = 0x00  # Accept all adv packets except directed adv packets not addressed to this device (default)
         cmd_pkt = struct.pack("<BBBBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type, Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
-        bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
+        return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         #Note: when the user needs to receive the data as fast as possible, make sure that scanning window is more than the advertising interval + 10ms to guarantee discovery. 
 
@@ -279,9 +280,9 @@ class BeaconPi(object):
 
         return result
 
-    def parse_events(self, loop_count=10):
+    def parse_events(self, hci_sock, loop_count=10):
         print("Waiting for socket")
-        pkt = self.hci_sock.recv(255)
+        pkt = hci_sock.recv(255)
         print("parse_events")
         print(pkt)
         # Raw avertise packet data from Bluez scan
