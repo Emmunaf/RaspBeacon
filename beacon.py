@@ -69,11 +69,11 @@ class BeaconPi(object):
 
     def start_le_scan(self):
         """Enable LE scan."""
-        self._switch_le_scan_enable(self.hci_sock, 0x01)
+        self._switch_le_scan_enable(0x01)
 
     def stop_le_scan(self):
         """Disable LE scan."""
-        self._switch_le_scan_enable(self.hci_sock, 0x00)
+        self._switch_le_scan_enable(0x00)
 
     def _switch_le_scan_enable(self, LE_Scan_Enable, filter_duplicates = 0x00):
         """Send LE SET SCAN ENABLE hci command to the current hci_socket.
@@ -87,8 +87,8 @@ class BeaconPi(object):
 
         # hci_sock = self.hci_sock
         print(LE_Scan_Enable)
-        #if LE_Scan_Enable != 0x00 and LE_Scan_Enable != 0x01:
-        #    raise ValueError("The argument enable_byte can assume just two values: 0x01 or 0x00")
+        if LE_Scan_Enable != 0x00 and LE_Scan_Enable != 0x01:
+            raise ValueError("The argument enable_byte can assume just two values: 0x01 or 0x00")
         # Create the structure needed for the parameters of the LE SET SCAN ENABLE hci command
         cmd_pkt = struct.pack("<BB", LE_Scan_Enable, filter_duplicates)  # LittleEndian(unsigned char, unsigned char)
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
