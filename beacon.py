@@ -59,7 +59,6 @@ class BeaconPi(object):
     def open_socket(self):
         self.hci_sock = bluez.hci_open_dev(self.device_id)
         print("socket opened")
-        print(self.hci_sock)
         return self.hci_sock
 
     @staticmethod
@@ -165,7 +164,7 @@ class BeaconPi(object):
         result["packet_length"] = param_len
         result["full_packet_str"] = self.packet_as_hex_string(pkt)
         result["full_packet_bin"] = pkt
-        print(result)
+        # print(result)
 
         # We check only for BLE events
         if event == LE_META_EVENT:
@@ -285,12 +284,10 @@ class BeaconPi(object):
                     report["payload_binary"], True, True)
                 # Parse the data payload after proximity_type
                 report["payload_data"] = report["payload_binary"][6:]
-                print("----------MAJOOOR AND MINOR-------------\n")
-                print(pkt)
                 major, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
-                print(major, minor)
-                print(self.verify_beacon_packet(report))
+                report["major"] = major
+                report["minor"] = minor
                 # print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
                 # print("(Unknown):", txpower)
