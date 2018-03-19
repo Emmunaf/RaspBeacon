@@ -3,6 +3,8 @@ import sys
 import struct
 import bluetooth._bluetooth as bluez
 
+from AESCipher import AESCipher
+
 """
 BlueZ usage resource:
 https://people.csail.mit.edu/albert/bluez-intro/x682.html"""
@@ -92,9 +94,10 @@ class BeaconPi(object):
                   so even if the advertising data is changed, it will not get passed to the application.
         """
 
-        # hci_sock = self.hci_sock
         if LE_Scan_Enable != 0x00 and LE_Scan_Enable != 0x01:
             raise ValueError("The argument enable_byte can assume just two values: 0x01 or 0x00")
+        if filter_duplicates != 0x00 and filter_duplicates != 0x01:
+            raise ValueError("The argument filter_duplicates can assume just two values: 0x01 or 0x00")
         # Create the structure needed for the parameters of the LE SET SCAN ENABLE hci command
         cmd_pkt = struct.pack("<BB", LE_Scan_Enable, filter_duplicates)  # LittleEndian(unsigned char, unsigned char)
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
@@ -143,16 +146,19 @@ class BeaconPi(object):
     def packed_bdaddr_to_string(self, address_byte):
         """Return a MAC address in str form, from a byte object"""
         return ':'.join('%02x' % i for i in struct.unpack("<BBBBBB", bytes(address_byte[::-1])))  # TODO controlla
-        # bluez.ba2str, str2ba
+        # TODO maybe use: bluez.ba2str, str2ba ?
 
     def hci_le_parse_event(self, pkt):
         """Parse a BLE packet.
             Returns a dictionary which contains the event id, length and packet type,
-            and possibly additional key/value pairs that represent the parsed content
-            of the packet.
+            and others additional key/value pairs that represent the parsed content
+            of the packet in binary and string form.
         """
-        print("hci_le_parse_event called")
+
+        # print("hci_le_parse_event called")
         result = {}
+        # (HCI packetype, Event, parameterLenght)
+        # HCI packettype codes (ptype):HCI Command = 0x01, syncronous Data = 0x02, Event = 0x04
         hci_packet_type, event, param_len = struct.unpack("<BBB", pkt[:3])
         result["packet_type"] = hci_packet_type
         result["bluetooth_event_id"] = event
@@ -163,6 +169,8 @@ class BeaconPi(object):
 
         # We check only for BLE events
         if event == LE_META_EVENT:
+            # We are looking for a beacon( BLE Advertisement) 
+            # EVT_LE_META_EVENT is the event name related to it
             result["bluetooth_event_name"] = "EVT_LE_META_EVENT"
             result.update(self._handle_le_meta_event(pkt[3:]))
 
@@ -191,8 +199,7 @@ class BeaconPi(object):
             # result.update(_handle_command_complete(pkt[3:]))
 
         elif event == bluez.EVT_INQUIRY_COMPLETE:
-            pass
-            # raise NotImplementedError("EVT_CMD_COMPLETE")
+            result["bluetooth_event_name"] = "EVT_INQUIRY_COMPLETE"
 
         else:
             result["bluetooth_event_name"] = "UNKNOWN"
@@ -228,6 +235,7 @@ class BeaconPi(object):
 
     def _handle_le_advertising_report(self, pkt):
         result = {}
+        # 
         num_reports = struct.unpack("<B", bytes([pkt[0]]))[0]
         report_pkt_offset = 0
         result["number_of_advertising_reports"] = num_reports
@@ -283,10 +291,7 @@ class BeaconPi(object):
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 print(major, minor)
                 print(self.verify_beacon_packet(report))
-                # print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
-                # print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
                 # print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
-                # commented out - don't know what this byte is.  It's NOT TXPower
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
                 # print("(Unknown):", txpower)
             # Each report length is (2 (event type, bdaddr type) + 6 (the address)
@@ -314,24 +319,16 @@ class BeaconPi(object):
         if (report["report_metadata_length"] != 28):
             return result
         # check Company ID (LEL = 0x8888) $4,5:7 
-        #print(struct.unpack("<B", bytes([report["payload_binary"][1]]))[0])
         if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
-        #print(struct.unpack("<H", bytes(report["payload_binary"][2:4]))[0])
         if (self.get_companyid(report["payload_binary"][2:4]) != COMPANY_ID):
             return result
 
         if (self.get_beacon_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
-        # check shortened local name ("IM")
-        '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
-                ADV_TYPE_SHORT_LOCAL_NAME):
-            return result
-        if ((report["payload_binary"][29:31] != "IM") and
-                (report["payload_binary"][29:31] != "EP")):
-            return result
-'''
+        # 6:28 DataPayload
+
         result = True
         return result
 
@@ -344,140 +341,23 @@ class BeaconPi(object):
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
         print("Waiting for socket")
         pkt = self.hci_sock.recv(255)
-        print("parse_events")
-        print(pkt)
-        # Raw avertise packet data from Bluez scan
-        # Packet Type (1byte) + BT Event ID (1byte) + Packet Length (1byte) +
-        # BLE sub-Event ID (1byte) + Number of Advertising reports (1byte) +
-        # Report type ID (1byte) + BT Address Type (1byte) + BT Address (6byte) +
-        # Data Length (1byte) + Data ((Data Length)byte) + RSSI (1byte)
-        #
-        # Packet Type = 0x04
-        # BT Event ID = EVT_LE_META_EVENT = 0x3E (BLE events)
-        # (All LE commands result in a metaevent, specified by BLE sub-Event ID)
-        # BLE sub-Event ID = {
-        #                       EVT_LE_CONN_COMPLETE = 0x01
-        #                       EVT_LE_ADVERTISING_REPORT = 0x02
-        #                       EVT_LE_CONN_UPDATE_COMPLETE = 0x03
-        #                       EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE = 0x04
-        #                       EVT_LE_LTK_REQUEST = 0x05
-        #                     }
-        # Number of Advertising reports = 0x01 (normally)
-        # Report type ID = {
-        #                       LE_ADV_IND = 0x00
-        #                       LE_ADV_DIRECT_IND = 0x01
-        #                       LE_ADV_SCAN_IND = 0x02
-        #                       LE_ADV_NONCONN_IND = 0x03
-        #                       LE_ADV_SCAN_RSP = 0x04
-        #                   }
-        # BT Address Type = {
-        #                       LE_PUBLIC_ADDRESS = 0x00
-        #                       LE_RANDOM_ADDRESS = 0x01
-        #                    }
-        # Data Length = 0x00 - 0x1F
-        # * Maximum Data Length of an advertising packet = 0x1F
-        debug = True
+        
+        debug = False
+        # Analyze what is received and parse usefull data
         parsed_packet = self.hci_le_parse_event(pkt)
-        print(parsed_packet)
         if "bluetooth_le_subevent_name" in parsed_packet and \
-                (parsed_packet["bluetooth_le_subevent_name"]
-                     == 'EVT_LE_ADVERTISING_REPORT'):
+            (parsed_packet["bluetooth_le_subevent_name"] == 'EVT_LE_ADVERTISING_REPORT'):
             if debug:
                 for report in parsed_packet["advertising_reports"]:
-                    print("----------------------------------------------------")
-                    print("Found BLE device:", report['peer_bluetooth_address'])
-                    print("Raw Advertising Packet:")
-                    print(self.packet_as_hex_string(pkt, True, True))
-                    print("")
-
-                    for k, v in report.items():
-                        if k == "payload_binary":
-                            continue
-                        print("\t%s: %s" % (k, v))
-                    print("")
+                    self.print_report(report)
 
             for report in parsed_packet["advertising_reports"]:
                 # if (self.verify_smart_beacon_packet(report)):
                 # If match our format we should do something
+                if self.verify_beacon_packet(report):
+                    self.print_report(report)
                 pass
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
-
-    def parse_events2(self, loop_count=100):
-        return True
-        # Save the current filter, for restoring later.
-        old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
-
-        # perform a device inquiry on bluetooth device #0
-        # The inquiry should last 8 * 1.28 = 10.24 seconds
-        # before the inquiry is performed, bluez should flush its cache of
-        # previously discovered devices
-        flt = bluez.hci_filter_new()
-        bluez.hci_filter_all_events(flt)
-        bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
-        self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
-        done = False
-        myFullList = []
-        for i in range(0, loop_count):
-            # Adv PDU type: ADV_NONCONN_IND (0x02): Non-connectable undirected advertising which cannot be connected to and cannot respond to a scan request.
-            pkt = self.hci_sock.recv(255)
-            # print("Received from socket: ", pkt)
-            # HCI packet type codes (ptype):HCI Command = 0x01, syncronous Data = 0x02, Event = 0x04
-            # (HCI packetype, Event, parameterLenght)
-            # http://rrbluetoothx.blogspot.it/2016/05/rr-bluetooth-gatttool-what-hci-commands.html
-            ptype, event, plen = struct.unpack("<BBB", bytes(pkt[:3]))
-            # print("--------------"
-            if event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
-                pass
-            elif event == bluez.EVT_NUM_COMP_PKTS:
-                pass
-            elif event == bluez.EVT_DISCONN_COMPLETE:
-                pass
-            elif event == LE_META_EVENT:
-                subevent, = struct.unpack("B", bytes([pkt[3]]))
-                pkt = pkt[4:]
-                if subevent == EVT_LE_CONN_COMPLETE:
-                    # le_handle_connection_complete(pkt)
-                    pass
-                elif subevent == EVT_LE_ADVERTISING_REPORT:
-                    # print("advertising report"
-                    # First byte of packet is the....
-                    num_reports = struct.unpack("B", bytes([pkt[0]]))[0]
-                    report_pkt_offset = 0
-                    # When there are more (Num_Reports > 1) advertising reports packed into one event
-                    # https://stackoverflow.com/questions/26275679/ble-hci-le-advertising-report-event-data-format
-                    for i in range(0, num_reports):
-                        if DEBUG:
-                            print("-------------")
-                            # print("\tfullpacket: ", printpacket(pkt)
-                            print("\tUDID: ", printpacket(pkt[report_pkt_offset - 22: report_pkt_offset - 6]))
-                            print("\tMAJOR: ", printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
-                            print("\tMINOR: ", printpacket(pkt[report_pkt_offset - 4: report_pkt_offset - 2]))
-                            print("\tMAC address: ",
-                                  self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
-                            # commented out - don't know what this byte is.  It's NOT TXPower
-                            txpower, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
-                            print("\t(Unknown):", txpower)
-
-                            rssi, = struct.unpack("b", bytes([pkt[report_pkt_offset - 1]]))
-                            print("\tRSSI:", rssi)
-                    # build the return string
-                    Adstring = self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
-                    Adstring += ","
-                    Adstring += returnstringpacket(pkt[report_pkt_offset - 22: report_pkt_offset - 6])
-                    Adstring += ","
-                    Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4])
-                    Adstring += ","
-                    Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset - 4: report_pkt_offset - 2])
-                    Adstring += ","
-                    Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
-                    Adstring += ","
-                    Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset - 1]]))
-
-                    # print("\tAdstring=", Adstring
-                    myFullList.append(Adstring)
-                done = True
-        self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
-        return myFullList
 
     def packet_as_hex_string(self, pkt, spacing=False,
                              capitalize=False):
@@ -494,41 +374,17 @@ class BeaconPi(object):
     def space_bt_address(self, bt_address):
         return ''.join(bt_address.split(':'))
 
-    '''
-    # verify received beacon packet format
-    def verify_beacon_packet(report):
-        result = False
-        # check payload length (31byte)
-        if (report["report_metadata_length"] != 31):
-            return result
-        # check Company ID (OMRON = 0x02D5)
-        if (struct.unpack("<B", report["payload_binary"][4])[0] !=
-                ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
-            return result
-        if (get_companyid(report["payload_binary"][5:7]) != COMPANY_ID):
-            return result
-        # check shortened local name ("IM")
-        if (struct.unpack("<B", report["payload_binary"][28])[0] !=
-                ADV_TYPE_SHORT_LOCAL_NAME):
-            return result
-        if ((report["payload_binary"][29:31] != "IM") and
-                (report["payload_binary"][29:31] != "EP")):
-            return result
-
-        result = True
-        return result
-
-
-    # classify beacon type sent from the sensor
-    def classify_beacon_packet(report):
-        if (report["payload_binary"][29:31] == "IM"):
-            return "IM"
-        elif (report["payload_binary"][29:31] == "EP"):
-            return "EP"
-        else:
-            return "UNKNOWN"
-            '''
-
+    def print_report(self, report):
+        print("----------------------------------------------------")
+        print("Found BLE device:", report['peer_bluetooth_address'])
+        print("Raw Advertising Packet:")
+        print(self.packet_as_hex_string(pkt, True, True))
+        print("")
+        for k, v in report.items():
+            if k == "payload_binary":
+                continue
+            print("\t%s: %s" % (k, v))
+        print("")
 
 # getsockopt(level, optname[, buflen]) -- get socket options\n\
 """
@@ -564,4 +420,37 @@ class BeaconPi(object):
         00 00 # minor
         c5 # The 2's complement of the calibrated Tx Power
     */
+"""
+
+"""
+# Raw avertise packet data from Bluez scan
+        # Packet Type (1byte) + BT Event ID (1byte) + Packet Length (1byte) +
+        # BLE sub-Event ID (1byte) + Number of Advertising reports (1byte) +
+        # Report type ID (1byte) + BT Address Type (1byte) + BT Address (6byte) +
+        # Data Length (1byte) + Data ((Data Length)byte) + RSSI (1byte)
+        #
+        # Packet Type = 0x04
+        # BT Event ID = EVT_LE_META_EVENT = 0x3E (BLE events)
+        # (All LE commands result in a metaevent, specified by BLE sub-Event ID)
+        # BLE sub-Event ID = {
+        #                       EVT_LE_CONN_COMPLETE = 0x01
+        #                       EVT_LE_ADVERTISING_REPORT = 0x02
+        #                       EVT_LE_CONN_UPDATE_COMPLETE = 0x03
+        #                       EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE = 0x04
+        #                       EVT_LE_LTK_REQUEST = 0x05
+        #                     }
+        # Number of Advertising reports = 0x01 (normally)
+        # Report type ID = {
+        #                       LE_ADV_IND = 0x00
+        #                       LE_ADV_DIRECT_IND = 0x01
+        #                       LE_ADV_SCAN_IND = 0x02
+        #                       LE_ADV_NONCONN_IND = 0x03
+        #                       LE_ADV_SCAN_RSP = 0x04
+        #                   }
+        # BT Address Type = {
+        #                       LE_PUBLIC_ADDRESS = 0x00
+        #                       LE_RANDOM_ADDRESS = 0x01
+        #                    }
+        # Data Length = 0x00 - 0x1F
+        # * Maximum Data Length of an advertising packet = 0x1F
 """
