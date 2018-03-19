@@ -302,8 +302,7 @@ class BeaconPi(object):
             #result["advertising_reports"].append(report)
             if self.verify_beacon_packet(report):
                 result["advertising_reports"].append(report)
-                print(len(report["payload_data"]))
-
+                print(report["decrypted_payload"].hex())
         return result
 
     def get_companyid(self, pkt):
@@ -331,10 +330,8 @@ class BeaconPi(object):
         if (self.get_beacon_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
 
-        #if len(report["payload_encrypted_data"]) != 16:
-        #    return result
-        print(report["payload_binary"])
-        print(report["payload_data"])
+        if len(report["payload_encrypted_data"]) != 16: #  AES blocksize
+            return result
         # 6:28 DataPayload
 
         result = True
