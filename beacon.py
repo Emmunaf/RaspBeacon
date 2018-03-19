@@ -275,7 +275,8 @@ class BeaconPi(object):
                             10 + report_data_length + 1])
                 report["payload"] = self.packet_as_hex_string(
                     report["payload_binary"], True, True)
-                # Parse the payload
+                # Parse the data payload
+                report["payload_data"] = struct.unpack("<H", bytes(report["payload_binary"][6:]))[0]
                 print("----------MAJOOOOOOOOOOOR-------------\n")
                 print(pkt)
                 major, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
@@ -300,6 +301,9 @@ class BeaconPi(object):
     def get_companyid(self, pkt):
         return (struct.unpack("<H", bytes(pkt))[0])
 
+    def get_proximity_type(self, pkt):
+        return (struct.unpack(">H", bytes(pkt))[0])
+
     def verify_beacon_packet(self, report):
         result = False
         # check payload length (31byte)
@@ -308,12 +312,15 @@ class BeaconPi(object):
         if (report["report_metadata_length"] != 28):
             return result
         # check Company ID (LEL = 0x8888) $4,5:7 
-        print(struct.unpack("<B", bytes([report["payload_binary"][1]]))[0])
+        #print(struct.unpack("<B", bytes([report["payload_binary"][1]]))[0])
         if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
-        print(struct.unpack("<H", bytes(report["payload_binary"][2:4]))[0])
+        #print(struct.unpack("<H", bytes(report["payload_binary"][2:4]))[0])
         if (self.get_companyid(report["payload_binary"][2:4]) != COMPANY_ID):
+            return result
+
+        if (self.get_companyid(report["payload_binary"][4:6]) != COMPANY_ID):
             return result
         # check shortened local name ("IM")
         '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
@@ -531,3 +538,28 @@ class BeaconPi(object):
 # https://raw.githubusercontent.com/jmleglise/mylittle-domoticz/master/Presence-detection-beacon/check_beacon_presence.py
 # https://books.google.it/books?id=3nCuDgAAQBAJ&pg=PA198&lpg=PA198&dq=hci+protocol+META+EVENT&source=bl&ots=rLU4o_v7na&sig=4IE82kPP5vfr-ShewNbIuqD_K3g&hl=it&sa=X&ved=0ahUKEwiZldihnuzZAhWiDcAKHZPmAD4Q6AEILDAA#v=onepage&q=hci%20protocol%20META%20EVENT&f=false
 # http://rrbluetoothx.blogspot.it/2016/
+
+
+"""
+ /*
+        IBeacon format found at http://stackoverflow.com/questions/18906988/what-is-the-ibeacon-bluetooth-profile
+        02 # Number of bytes that follow in first AD structure  # Just iBeacon
+        01 # Flags AD type # Just iBeacon
+        1A # Flags value 0x1A = 000011010 # Just iBeacon
+        # Alt beacon begins here
+        bit 0 (OFF) LE Limited Discoverable Mode
+        bit 1 (ON) LE General Discoverable Mode
+        bit 2 (OFF) BR/EDR Not Supported
+        bit 3 (ON) Simultaneous LE and BR/EDR to Same Device Capable (controller)
+        bit 4 (ON) Simultaneous LE and BR/EDR to Same Device Capable (Host)
+        1A # Number of bytes that follow in second (and last) AD structure
+        FF # Manufacturer specific data AD type
+        4C 00 # Company identifier code (0x004C == Apple)
+        02 # Byte 0 of iBeacon advertisement indicator
+        15 # Byte 1 of iBeacon advertisement indicator
+        e2 c5 6d b5 df fb 48 d2 b0 60 d0 f5 a7 10 96 e0 # iBeacon proximity uuid
+        00 00 # major
+        00 00 # minor
+        c5 # The 2's complement of the calibrated Tx Power
+    */
+"""
