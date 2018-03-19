@@ -336,7 +336,7 @@ class BeaconPi(object):
         bluez.hci_filter_all_events(flt)
         bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
-        print("Waiting for socket")
+        #print("Waiting for socket")
         pkt = self.hci_sock.recv(255)
         
         debug = False
