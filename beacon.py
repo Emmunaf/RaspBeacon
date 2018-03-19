@@ -284,7 +284,7 @@ class BeaconPi(object):
                     report["payload_binary"], True, True)
                 # Parse the data payload after proximity_type
                 report["payload_data"] = report["payload_binary"][6:]
-                report["payload_encrypted_data"] = report["payload_data"][:-6]
+                report["payload_encrypted_data"] = report["payload_data"][:report_pkt_offset - 7]
                 major, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 report["major"] = major
