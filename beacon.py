@@ -299,9 +299,11 @@ class BeaconPi(object):
         return result
 
     def get_companyid(self, pkt):
+        # 2 bytes as Little Endian 
         return (struct.unpack("<H", bytes(pkt))[0])
 
-    def get_proximity_type(self, pkt):
+    def get_beacon_type(self, pkt):
+        # 2 bytes Big Endian 
         return (struct.unpack(">H", bytes(pkt))[0])
 
     def verify_beacon_packet(self, report):
@@ -320,7 +322,7 @@ class BeaconPi(object):
         if (self.get_companyid(report["payload_binary"][2:4]) != COMPANY_ID):
             return result
 
-        if (self.get_proximity_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
+        if (self.get_beacon_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
         # check shortened local name ("IM")
         '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
