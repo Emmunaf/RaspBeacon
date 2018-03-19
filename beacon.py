@@ -349,13 +349,13 @@ class BeaconPi(object):
             (parsed_packet["bluetooth_le_subevent_name"] == 'EVT_LE_ADVERTISING_REPORT'):
             if debug:
                 for report in parsed_packet["advertising_reports"]:
-                    self.print_report(report)
+                    self.print_report(report, pkt)
 
             for report in parsed_packet["advertising_reports"]:
                 # if (self.verify_smart_beacon_packet(report)):
                 # If match our format we should do something
                 if self.verify_beacon_packet(report):
-                    self.print_report(report)
+                    self.print_report(report, pkt)
                 pass
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
 
@@ -374,7 +374,7 @@ class BeaconPi(object):
     def space_bt_address(self, bt_address):
         return ''.join(bt_address.split(':'))
 
-    def print_report(self, report):
+    def print_report(self, report, pkt):
         print("----------------------------------------------------")
         print("Found BLE device:", report['peer_bluetooth_address'])
         print("Raw Advertising Packet:")
