@@ -328,6 +328,9 @@ class BeaconPi(object):
 
         if (self.get_beacon_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
+
+        if len(report["payload_data"]) != 16:
+            return result
         # 6:28 DataPayload
 
         result = True
