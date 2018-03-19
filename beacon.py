@@ -315,7 +315,7 @@ class BeaconPi(object):
             return result
         # check Company ID (LEL = 0x8888) $4,5:7 
         #print(struct.unpack("<B", bytes([report["payload_binary"][1]]))[0])
-        if (struct.unpack("<B", bytes([report["payload_binary"][1:2]]))[0] !=
+        if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
         #print(struct.unpack("<H", bytes(report["payload_binary"][2:4]))[0])
