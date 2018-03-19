@@ -288,6 +288,7 @@ class BeaconPi(object):
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 report["major"] = major
                 report["minor"] = minor
+                report["decrypted_payload"] = self.decrypt_payload(pkt)
                 # print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
                 # print("(Unknown):", txpower)
@@ -355,6 +356,23 @@ class BeaconPi(object):
                     self.print_report(report, pkt)
                 pass
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
+
+    def decrypt_payload(self, pkt):
+        AESkey = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
+        AESiv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
+        aesc = AESCipher(AESkey)
+        aesc.set_iv(AESiv)
+        decrypted_bytes = aesc.decrypt(pkt)
+        # decrypted_bytes.hex()
+        return decrypted_bytes
+
+    def encrypt_payload(self, pkt):
+        AESkey = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
+        AESiv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
+        aesc = AESCipher(AESkey)
+        aesc.set_iv(AESiv)
+        encrypted_bytes = aesc.encrypt(pkt)
+        return encrypted_bytes
 
     def packet_as_hex_string(self, pkt, spacing=False,
                              capitalize=False):
