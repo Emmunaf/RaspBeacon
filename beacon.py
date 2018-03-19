@@ -288,8 +288,7 @@ class BeaconPi(object):
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 report["major"] = major
                 report["minor"] = minor
-                print(len(report["payload_data"]))
-                if len(report["payload_data"]) == 16:
+                if len(report["payload_data"]) == 22:
                     report["decrypted_payload"] = self.decrypt_payload(report["payload_data"])
                 # print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
@@ -302,6 +301,7 @@ class BeaconPi(object):
             #result["advertising_reports"].append(report)
             if self.verify_beacon_packet(report):
                 result["advertising_reports"].append(report)
+                print(len(report["payload_data"]))
 
         return result
 
@@ -330,7 +330,7 @@ class BeaconPi(object):
         if (self.get_beacon_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
 
-        if len(report["payload_data"]) != 16:
+        if len(report["payload_data"]) != 22:
             return result
         # 6:28 DataPayload
 
