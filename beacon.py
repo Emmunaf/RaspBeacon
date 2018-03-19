@@ -46,7 +46,7 @@ SCAN_REQ = 0x03  # scan request
 ADV_SCAN_RSP = 0x04  # scan response
 CONNECT_REQ = 0x05  # connection request
 ADV_DISCOVER_IND = 0x06  # scannable undirected advertising
-
+BEACON_TYPE_CODE = 0xBEAC # Alt Beacon identifier
 
 class BeaconPi(object):
     """A general class useful for handling beacon"""
@@ -313,14 +313,14 @@ class BeaconPi(object):
             return result
         # check Company ID (LEL = 0x8888) $4,5:7 
         #print(struct.unpack("<B", bytes([report["payload_binary"][1]]))[0])
-        if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
+        if (struct.unpack("<B", bytes([report["payload_binary"][1:2]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
         #print(struct.unpack("<H", bytes(report["payload_binary"][2:4]))[0])
         if (self.get_companyid(report["payload_binary"][2:4]) != COMPANY_ID):
             return result
 
-        if (self.get_companyid(report["payload_binary"][4:6]) != COMPANY_ID):
+        if (self.get_proximity_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
         # check shortened local name ("IM")
         '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
