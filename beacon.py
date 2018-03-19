@@ -66,14 +66,13 @@ class BeaconPi(object):
         ret_str = ""
         for byte in pkt:
             ret_str += ("%02x " % struct.unpack("B", bytes([byte]))[0])
-        return(ret_str)
+        return (ret_str)
         # print("%02x " %i for i in struct.unpack("B", bytes([byte])))
 
     @staticmethod
     def packet2str(pkt):
         """TODO the packet in readable hex format"""
-        return("%02x " %byte for byte in struct.unpack("B", bytes([byte])))
-
+        return ("%02x " % byte for byte in struct.unpack("B", bytes([byte])))
 
     def start_le_scan(self):
         """Enable LE scan."""
@@ -83,7 +82,7 @@ class BeaconPi(object):
         """Disable LE scan."""
         self._switch_le_scan_enable(0x00)
 
-    def _switch_le_scan_enable(self, LE_Scan_Enable, filter_duplicates = 0x00):
+    def _switch_le_scan_enable(self, LE_Scan_Enable, filter_duplicates=0x00):
         """Send LE SET SCAN ENABLE hci command to the current hci_socket.
         
             @params
@@ -108,14 +107,15 @@ class BeaconPi(object):
 
         # old_filter = hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)  # when restore the filter? somethign like hci_le_restore_scan_parameters()? not needed?
         LE_Scan_Type = 0x00  # Passive Scanning. No scanning PDUs shall be sent (default)
-        LE_Scan_Interval =  0x0010 # Range: 0x0004 to 0x4000 Default: 0x0010 (10 ms), Time = N * 0.625 ms, Time Range: 2.5 ms to 10.24 s
+        LE_Scan_Interval = 0x0010  # Range: 0x0004 to 0x4000 Default: 0x0010 (10 ms), Time = N * 0.625 ms, Time Range: 2.5 ms to 10.24 s
         LE_Scan_Window = 0x0010  # Duration of the LE scan. LE_Scan_Window shall be less than or equal to LE_Scan_Interval
         Own_Address_Type = 0x01  # 0x01 - Random Device Address, 0x00 - Public Device Address (default)
         Scanning_Filter_Policy = 0x00  # Accept all adv packets except directed adv packets not addressed to this device (default)
-        cmd_pkt = struct.pack("<BBBBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type, Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
+        cmd_pkt = struct.pack("<BBBBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
+                              Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
-        #Note: when the user needs to receive the data as fast as possible, make sure that scanning window is more than the advertising interval + 10ms to guarantee discovery. 
+        # Note: when the user needs to receive the data as fast as possible, make sure that scanning window is more than the advertising interval + 10ms to guarantee discovery.
 
     def read(self):
         """Calling read on an open HCI hci_socket waits for and receives the next event from the microcontroller. An event consists of a header field specifying the event type, and the event parameters. A program that requires asynchronous device detection would, for example, send a command with ocf of OCF_INQUIRY and wait for events of type EVT_INQUIRY_RESULT and EVT_INQUIRY_COMPLETE. The specific codes to use for each command and event are defined in the specifications and in the BlueZ source code."""
@@ -125,11 +125,11 @@ class BeaconPi(object):
         status, handle, role, peer_bdaddr_type = struct.unpack("<BHBB", pkt[0:5])
         device_address = self.packed_bdaddr_to_string(pkt[5:11])
         interval, latency, supervision_timeout, master_clock_accuracy = struct.unpack("<HHHB", pkt[11:])
-        #print "le_handle_connection output"
-        #print "status: 0x%02x\nhandle: 0x%04x" % (status, handle)
-        #print "role: 0x%02x" % role
-        #print "device address: ", device_address
-        
+        # print "le_handle_connection output"
+        # print "status: 0x%02x\nhandle: 0x%04x" % (status, handle)
+        # print "role: 0x%02x" % role
+        # print "device address: ", device_address
+
     def get_packed_bdaddr(self, address_str):
         """Return a byte packed address from a string form(AA:BB:..)"""
 
@@ -143,7 +143,7 @@ class BeaconPi(object):
     def packed_bdaddr_to_string(self, address_byte):
         """Return a MAC address in str form, from a byte object"""
         return ':'.join('%02x' % i for i in struct.unpack("<BBBBBB", bytes(address_byte[::-1])))  # TODO controlla
-        #bluez.ba2str, str2ba
+        # bluez.ba2str, str2ba
 
     def hci_le_parse_event(self, pkt):
         """Parse a BLE packet.
@@ -168,31 +168,31 @@ class BeaconPi(object):
 
         elif event == bluez.EVT_NUM_COMP_PKTS:
             result["bluetooth_event_name"] = "EVT_NUM_COMP_PKTS"
-            #result.update(_handle_num_completed_packets(pkt[3:]))
+            # result.update(_handle_num_completed_packets(pkt[3:]))
 
         elif event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
             result["bluetooth_event_name"] = "EVT_INQUIRY_RESULT_WITH_RSSI"
-            #result.update(_handle_inquiry_result_with_rssi(pkt[3:]))
+            # result.update(_handle_inquiry_result_with_rssi(pkt[3:]))
 
         elif event == bluez.EVT_INQUIRY_RESULT:
             result["bluetooth_event_name"] = "EVT_INQUIRY_RESULT"
-            #result.update(_handle_inquiry_result(pkt[3:]))
+            # result.update(_handle_inquiry_result(pkt[3:]))
 
         elif event == bluez.EVT_DISCONN_COMPLETE:
             result["bluetooth_event_name"] = "EVT_DISCONN_COMPLETE"
-            #result.update(_handle_disconn_complete(pkt[3:]))
+            # result.update(_handle_disconn_complete(pkt[3:]))
 
         elif event == bluez.EVT_CMD_STATUS:
             result["bluetooth_event_name"] = "EVT_CMD_STATUS"
-            #result.update(_handle_command_status(pkt[3:]))
+            # result.update(_handle_command_status(pkt[3:]))
 
         elif event == bluez.EVT_CMD_COMPLETE:
             result["bluetooth_event_name"] = "EVT_CMD_COMPLETE"
-            #result.update(_handle_command_complete(pkt[3:]))
+            # result.update(_handle_command_complete(pkt[3:]))
 
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             pass
-            #raise NotImplementedError("EVT_CMD_COMPLETE")
+            # raise NotImplementedError("EVT_CMD_COMPLETE")
 
         else:
             result["bluetooth_event_name"] = "UNKNOWN"
@@ -210,11 +210,11 @@ class BeaconPi(object):
 
         elif subevent == EVT_LE_CONN_COMPLETE:
             result["bluetooth_le_subevent_name"] = "EVT_LE_CONN_COMPLETE"
-            #result.update(_handle_le_connection_complete(pkt))
+            # result.update(_handle_le_connection_complete(pkt))
 
         elif subevent == EVT_LE_CONN_UPDATE_COMPLETE:
             result["bluetooth_le_subevent_name"] = "EVT_LE_CONN_UPDATE_COMPLETE"
-            #raise NotImplementedError("EVT_LE_CONN_UPDATE_COMPLETE")
+            # raise NotImplementedError("EVT_LE_CONN_UPDATE_COMPLETE")
 
         elif subevent == EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE:
             result["bluetooth_le_subevent_name"] = \
@@ -232,7 +232,7 @@ class BeaconPi(object):
         report_pkt_offset = 0
         result["number_of_advertising_reports"] = num_reports
         result["advertising_reports"] = []
-        
+
         for i in range(0, num_reports):
             report = {}
             report_event_type = struct.unpack("<B", bytes([pkt[report_pkt_offset + 1]]))[0]
@@ -271,23 +271,23 @@ class BeaconPi(object):
             if report_data_length > 0:
                 report["payload_binary"] = \
                     (pkt[report_pkt_offset +
-                    10:report_pkt_offset +
-                    10 + report_data_length + 1])
+                         10:report_pkt_offset +
+                            10 + report_data_length + 1])
                 report["payload"] = self.packet_as_hex_string(
                     report["payload_binary"], True, True)
-                    # Parse the payload
+                # Parse the payload
                 print("----------MAJOOOOOOOOOOOR-------------\n")
                 print(pkt)
                 major, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 7: report_pkt_offset - 5]))
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 print(major, minor)
                 print(self.verify_beacon_packet(report))
-                #print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
-                #print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
-                #print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
+                # print("MAJOR: ", self.printpacket(pkt[report_pkt_offset - 8: report_pkt_offset - 6]))
+                # print("MINOR: ", self.printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
+                # print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 # commented out - don't know what this byte is.  It's NOT TXPower
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
-                #print("(Unknown):", txpower)
+                # print("(Unknown):", txpower)
             # Each report length is (2 (event type, bdaddr type) + 6 (the address)
             #    + 1 (data length field) + data length + 1 (rssi)) bytes long.
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
@@ -298,8 +298,7 @@ class BeaconPi(object):
         return result
 
     def get_companyid(self, pkt):
-        return (struct.unpack("<B", bytes(pkt[1]))[0] << 8) | \
-            struct.unpack("<B", bytes(pkt[0]))[0]
+        return (struct.unpack("<I", bytes(pkt)))
 
     def verify_beacon_packet(self, report):
         result = False
@@ -312,6 +311,7 @@ class BeaconPi(object):
         if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
+        print(struct.unpack("<I", bytes(report["payload_binary"][2:3])))
         if (self.get_companyid(report["payload_binary"][2:3]) != COMPANY_ID):
             return result
         # check shortened local name ("IM")
@@ -371,8 +371,7 @@ class BeaconPi(object):
         print(parsed_packet)
         if "bluetooth_le_subevent_name" in parsed_packet and \
                 (parsed_packet["bluetooth_le_subevent_name"]
-                    == 'EVT_LE_ADVERTISING_REPORT'):
-
+                     == 'EVT_LE_ADVERTISING_REPORT'):
             if debug:
                 for report in parsed_packet["advertising_reports"]:
                     print("----------------------------------------------------")
@@ -380,7 +379,7 @@ class BeaconPi(object):
                     print("Raw Advertising Packet:")
                     print(self.packet_as_hex_string(pkt, True, True))
                     print("")
-                    
+
                     for k, v in report.items():
                         if k == "payload_binary":
                             continue
@@ -388,9 +387,9 @@ class BeaconPi(object):
                     print("")
 
             for report in parsed_packet["advertising_reports"]:
-                #if (self.verify_smart_beacon_packet(report)):
-                    #If match our format we should do something
-                    pass
+                # if (self.verify_smart_beacon_packet(report)):
+                # If match our format we should do something
+                pass
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
 
     def parse_events2(self, loop_count=100):
@@ -409,7 +408,7 @@ class BeaconPi(object):
         done = False
         myFullList = []
         for i in range(0, loop_count):
-            #Adv PDU type: ADV_NONCONN_IND (0x02): Non-connectable undirected advertising which cannot be connected to and cannot respond to a scan request.
+            # Adv PDU type: ADV_NONCONN_IND (0x02): Non-connectable undirected advertising which cannot be connected to and cannot respond to a scan request.
             pkt = self.hci_sock.recv(255)
             # print("Received from socket: ", pkt)
             # HCI packet type codes (ptype):HCI Command = 0x01, syncronous Data = 0x02, Event = 0x04
@@ -427,7 +426,7 @@ class BeaconPi(object):
                 subevent, = struct.unpack("B", bytes([pkt[3]]))
                 pkt = pkt[4:]
                 if subevent == EVT_LE_CONN_COMPLETE:
-                    #le_handle_connection_complete(pkt)
+                    # le_handle_connection_complete(pkt)
                     pass
                 elif subevent == EVT_LE_ADVERTISING_REPORT:
                     # print("advertising report"
@@ -443,7 +442,8 @@ class BeaconPi(object):
                             print("\tUDID: ", printpacket(pkt[report_pkt_offset - 22: report_pkt_offset - 6]))
                             print("\tMAJOR: ", printpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]))
                             print("\tMINOR: ", printpacket(pkt[report_pkt_offset - 4: report_pkt_offset - 2]))
-                            print("\tMAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
+                            print("\tMAC address: ",
+                                  self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                             # commented out - don't know what this byte is.  It's NOT TXPower
                             txpower, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
                             print("\t(Unknown):", txpower)
@@ -470,19 +470,20 @@ class BeaconPi(object):
         return myFullList
 
     def packet_as_hex_string(self, pkt, spacing=False,
-                        capitalize=False):
+                             capitalize=False):
         packet = ""
         space = ""
-        if (spacing):
+        if spacing:
             space = " "
         for b in pkt:
             packet = packet + "%02x" % struct.unpack("<B", bytes([b]))[0] + space
-        if (capitalize):
+        if capitalize:
             packet = packet.upper()
         return packet
 
     def space_bt_address(self, bt_address):
         return ''.join(bt_address.split(':'))
+
     '''
     # verify received beacon packet format
     def verify_beacon_packet(report):
@@ -517,13 +518,15 @@ class BeaconPi(object):
         else:
             return "UNKNOWN"
             '''
-#getsockopt(level, optname[, buflen]) -- get socket options\n\
+
+
+# getsockopt(level, optname[, buflen]) -- get socket options\n\
 """
  * params:  (int) device number
  * effect: opens and binds a new HCI socket
  * return: a PySocketSockObject, or NULL on failure
 """
-#http://dev.ti.com/tirex/content/simplelink_academy_cc2640r2sdk_1_12_01_16/modules/ble_scan_adv_basic/ble_scan_adv_basic.html
-#https://raw.githubusercontent.com/jmleglise/mylittle-domoticz/master/Presence-detection-beacon/check_beacon_presence.py
+# http://dev.ti.com/tirex/content/simplelink_academy_cc2640r2sdk_1_12_01_16/modules/ble_scan_adv_basic/ble_scan_adv_basic.html
+# https://raw.githubusercontent.com/jmleglise/mylittle-domoticz/master/Presence-detection-beacon/check_beacon_presence.py
 # https://books.google.it/books?id=3nCuDgAAQBAJ&pg=PA198&lpg=PA198&dq=hci+protocol+META+EVENT&source=bl&ots=rLU4o_v7na&sig=4IE82kPP5vfr-ShewNbIuqD_K3g&hl=it&sa=X&ved=0ahUKEwiZldihnuzZAhWiDcAKHZPmAD4Q6AEILDAA#v=onepage&q=hci%20protocol%20META%20EVENT&f=false
 # http://rrbluetoothx.blogspot.it/2016/
