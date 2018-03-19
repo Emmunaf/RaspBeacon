@@ -298,7 +298,9 @@ class BeaconPi(object):
             report_pkt_offset = report_pkt_offset + 10 + report_data_length + 1
             rssi, = struct.unpack("<b", bytes([pkt[report_pkt_offset - 1]]))
             report["rssi"] = rssi
-            result["advertising_reports"].append(report)
+            #result["advertising_reports"].append(report)
+            if self.verify_beacon_packet(report):
+                result["advertising_reports"].append(report)
 
         return result
 
