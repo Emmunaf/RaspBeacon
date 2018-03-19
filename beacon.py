@@ -305,7 +305,7 @@ class BeaconPi(object):
         # check payload length (31byte)
         ADV_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF
         COMPANY_ID = 0x8888
-        if (report["report_metadata_length"] != 31):
+        if (report["report_metadata_length"] != 28):
             return result
         # check Company ID (LEL = 0x8888) $4,5:7 
         print(struct.unpack("<B", bytes([report["payload_binary"][1]]))[0])
