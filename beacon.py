@@ -311,8 +311,8 @@ class BeaconPi(object):
         if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
-        print(struct.unpack("<I", bytes(report["payload_binary"][2:3])))
-        if (self.get_companyid(report["payload_binary"][2:3]) != COMPANY_ID):
+        print(struct.unpack("<I", bytes(report["payload_binary"][2:4])))
+        if (self.get_companyid(report["payload_binary"][2:4]) != COMPANY_ID):
             return result
         # check shortened local name ("IM")
         '''if (struct.unpack("<B", report["payload_binary"][28])[0] !=
