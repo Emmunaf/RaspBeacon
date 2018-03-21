@@ -130,8 +130,8 @@ class BeaconPi(object):
     def hci_set_advertising_parameters(self):
         """Set the parameters needed for a (quick/slow) scan"""
 
-        advertising_interval_min = 0x0020  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
-        advertising_interval_min = 0x0030  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
+        advertising_interval_min = 0x0100  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
+        advertising_interval_min = 0x0120  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
         advertising_type = ADV_NONCONN_IND  # Advertising Type([un]Connactable/[un]directed/...)
         own_address_type = 0x00  # 0x00 public, 0x01 random
         peer_address_type = 0x00
