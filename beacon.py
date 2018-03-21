@@ -414,9 +414,15 @@ class BeaconPi(object):
     def le_set_advertising_data(self, adv_data):
         # Change filter/mode TODO
         # LE Set Advertising Data ->
-        adv_len = 28
+        # Advertising Data Flags (not part of AltBeacon standard)
+        AD_LENGHT_FLAG = 0x02   # Number of AD flag structure
+        AD_TYPE_FLAG = 0x01     # Type of AD structure as Flags type
+        AD_DATA_FLAG = 0x1a    # Flags data LE General Discoverable
         
-        cmd_pkt = struct.pack(">BB", adv_len, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
+        adv_header_flags = struct.pack(">BBB", AD_LENGHT_FLAG, AD_TYPE_FLAG, AD_DATA_FLAG)
+
+        AD_DATA_LEN = 27 # Lenght of advertisement (for ALTBeaconstandard = 0x1b)
+        cmd_pkt = struct.pack(">BB", AD_DATA_LEN, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
         cmd_pkt += struct.pack("<H", COMPANY_ID)
         cmd_pkt += struct.pack(">H", BEACON_TYPE_CODE)
         # Custom values begins here
@@ -431,6 +437,7 @@ class BeaconPi(object):
         cmd_pkt += struct.pack(">H", adv_data["user_id"])
         cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
         cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
+        cmd_pkt = adv_header_flags + cmd_pkt
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
         print(cmd_pkt.hex())
