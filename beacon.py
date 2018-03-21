@@ -133,7 +133,7 @@ class BeaconPi(object):
         """Set the parameters needed for a (quick/slow) scan"""
 
         advertising_interval_min = 0x00A0  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
-        advertising_interval_max = 0x00A0  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
+        advertising_interval_max = 0x00A8  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
         advertising_type = ADV_NONCONN_IND  # Advertising Type([un]Connactable/[un]directed/...)
         own_address_type, peer_address_type = 0x00, 0x00  # 0x00 public, 0x01 random
         channels_map = 0x07
@@ -144,7 +144,7 @@ class BeaconPi(object):
         cmd_pkt += struct.pack("<BB", channels_map, filter_policy)  # All channels
         print(cmd_pkt.hex())
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
-        #print(res)
+        print(res)
         return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: If the advertising interval range provided by the Host (Advertising_Interval_Min, Advertising_Interval_Max) is outside the advertising interval range supported by the Controller, then the Controller shall return the Unsupported Feature or Parameter Value (0x11) error code.
@@ -561,4 +561,10 @@ class BeaconPi(object):
         #                    }
         # Data Length = 0x00 - 0x1F
         # * Maximum Data Length of an advertising packet = 0x1F
+"""
+"""
+sudo hciconfig hci0 up
+sudo hcitool -i hci0 cmd 0x08 0x0008 1e 02 01 1a 1a ff 4c 00 02 15 e2 c5 6d b5 df fb 48 d2 b0 60 d0 f5 a7 10 96 e0 00 00 00 00 c5 00 00 00 00 00 00 00 00 00 00 00 00 00
+sudo hcitool -i hci0 cmd 0x08 0x0006 A0 00 A0 00 03 00 00 00 00 00 00 00 00 07 00
+sudo hcitool -i hci0 cmd 0x08 0x000a 01
 """
