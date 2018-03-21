@@ -272,6 +272,7 @@ class BeaconPi(object):
                 report["report_type_string"] = "LE_ADV_SCAN_IND"
 
             elif report_event_type == ADV_NONCONN_IND:
+                # this should be the case of altbeacon
                 report["report_type_string"] = "LE_ADV_NONCONN_IND"
 
             elif report_event_type == ADV_SCAN_RSP:
@@ -417,11 +418,17 @@ class BeaconPi(object):
         # Advertising Data Flags (not part of AltBeacon standard)
         AD_TOT_LEN = 0x1f
         AD_LENGHT_FLAG = 0x02   # Number of AD flag structure
-        AD_TYPE_FLAG = 0x01     # Type of AD structure as Flags type
-        AD_DATA_FLAG = 0x1a    # Flags data LE General Discoverable
-        
+        AD_TYPE_FLAG = 0x01     # Type of AD structure, 0x01 tells that an AD Flags structure will follow
+        # list of ADTYPE: https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
+        AD_DATA_FLAG = 12    # Flags data LE General Discoverable
+        ''' # Flags value 12 = 0xc = 000001100  
+        bit 0 (OFF) LE Limited Discoverable Mode
+        bit 1 (ON) LE General Discoverable Mode
+        bit 2 (ON) BR/EDR Not Supported
+        bit 3 (OFF) Simultaneous LE and BR/EDR to Same Device Capable (controller)
+        bit 4 (OFF) Simultaneous LE and BR/EDR to Same Device Capable (Host)
+        '''
         adv_header_flags = struct.pack(">BBBB", AD_TOT_LEN, AD_LENGHT_FLAG, AD_TYPE_FLAG, AD_DATA_FLAG)
-
         AD_DATA_LEN = 27 # Lenght of advertisement (for ALTBeaconstandard = 0x1b)
         cmd_pkt = struct.pack(">BB", AD_DATA_LEN, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
         cmd_pkt += struct.pack("<H", COMPANY_ID)
@@ -441,7 +448,6 @@ class BeaconPi(object):
         cmd_pkt = adv_header_flags + cmd_pkt
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
-        print(cmd_pkt.hex())
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
 
     def le_set_advertising_status(self, enable = True):
