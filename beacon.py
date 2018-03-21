@@ -119,7 +119,7 @@ class BeaconPi(object):
         LE_Scan_Window = 0x0010  # Duration of the LE scan. LE_Scan_Window shall be less than or equal to LE_Scan_Interval
         Own_Address_Type = 0x01  # 0x01 - Random Device Address, 0x00 - Public Device Address (default)
         Scanning_Filter_Policy = 0x00  # Accept all adv packets except directed adv packets not addressed to this device (default)
-        cmd_pkt = struct.pack("BHHBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
+        cmd_pkt = struct.pack("<BHHBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
                               Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
         #print(res)
@@ -135,7 +135,7 @@ class BeaconPi(object):
         advertising_type = ADV_NONCONN_IND  # Advertising Type([un]Connactable/[un]directed/...)
         own_address_type = 0x00  # 0x00 public, 0x01 random
         peer_address_type = 0x00
-        cmd_pkt = struct.pack("HHBBB", advertising_interval_min, advertising_interval_min, advertising_type, own_address_type,
+        cmd_pkt = struct.pack("<HHBBB", advertising_interval_min, advertising_interval_min, advertising_type, own_address_type,
                               peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
         #print(res)
