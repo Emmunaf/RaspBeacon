@@ -137,6 +137,7 @@ class BeaconPi(object):
         peer_address_type = 0x00
         cmd_pkt = struct.pack("<HHBBB", advertising_interval_min, advertising_interval_min, advertising_type, own_address_type,
                               peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
+        print(cmd_pkt)
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
         #print(res)
         return res
