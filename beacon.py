@@ -122,7 +122,7 @@ class BeaconPi(object):
         cmd_pkt = struct.pack("BHHBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
                               Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
-        print(res)
+        #print(res)
         return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: when the user needs to receive the data as fast as possible, make sure that scanning window is more than the advertising interval + 10ms to guarantee discovery.
@@ -130,15 +130,15 @@ class BeaconPi(object):
     def hci_set_advertising_parameters(self):
         """Set the parameters needed for a (quick/slow) scan"""
 
-        advertising_interval_min = 0x0032  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
-        advertising_interval_min = 0x0060  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
+        advertising_interval_min = 0x0020  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
+        advertising_interval_min = 0x0030  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
         advertising_type = ADV_NONCONN_IND  # Advertising Type([un]Connactable/[un]directed/...)
         own_address_type = 0x00  # 0x00 public, 0x01 random
         peer_address_type = 0x00
         cmd_pkt = struct.pack("HHBBB", advertising_interval_min, advertising_interval_min, advertising_type, own_address_type,
                               peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
-        print(res)
+        #print(res)
         return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: If the advertising interval range provided by the Host (Advertising_Interval_Min, Advertising_Interval_Max) is outside the advertising interval range supported by the Controller, then the Controller shall return the Unsupported Feature or Parameter Value (0x11) error code.
