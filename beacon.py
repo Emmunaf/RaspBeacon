@@ -22,6 +22,7 @@ LE_RANDOM_ADDRESS = 0x01
 LE_SET_SCAN_PARAMETERS_CP_SIZE = 7
 OGF_LE_CTL = 0x08
 OCF_LE_SET_SCAN_PARAMETERS = 0x000B
+OCF_LE_SET_ADVERTISING_PARAMETERS =0x0006
 OCF_LE_SET_SCAN_ENABLE = 0x000C
 OCF_LE_CREATE_CONN = 0x000D
 OCF_LE_SET_ADVERTISING_DATA = 0x0008
@@ -118,11 +119,25 @@ class BeaconPi(object):
         LE_Scan_Window = 0x0010  # Duration of the LE scan. LE_Scan_Window shall be less than or equal to LE_Scan_Interval
         Own_Address_Type = 0x01  # 0x01 - Random Device Address, 0x00 - Public Device Address (default)
         Scanning_Filter_Policy = 0x00  # Accept all adv packets except directed adv packets not addressed to this device (default)
-        cmd_pkt = struct.pack("<BBBBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
+        cmd_pkt = struct.pack("BHHBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
                               Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: when the user needs to receive the data as fast as possible, make sure that scanning window is more than the advertising interval + 10ms to guarantee discovery.
+
+    def hci_set_advertising_parameters(self):
+        """Set the parameters needed for a (quick/slow) scan"""
+
+        advertising_interval_min = 0x0032  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
+        advertising_interval_min = 0x0060  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
+        advertising_type = ADV_NONCONN_IND  # Advertising Type([un]Connactable/[un]directed/...)
+        own_address_type = 0x00  # 0x00 public, 0x01 random
+        peer_address_type = 0x00
+        cmd_pkt = struct.pack("HHBBB", advertising_interval_min, advertising_interval_min, advertising_type, own_address_type,
+                              peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
+        return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
+        # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
+        # Note: If the advertising interval range provided by the Host (Advertising_Interval_Min, Advertising_Interval_Max) is outside the advertising interval range supported by the Controller, then the Controller shall return the Unsupported Feature or Parameter Value (0x11) error code.
 
     def read(self):
         """Calling read on an open HCI hci_socket waits for and receives the next event from the microcontroller. An event consists of a header field specifying the event type, and the event parameters. A program that requires asynchronous device detection would, for example, send a command with ocf of OCF_INQUIRY and wait for events of type EVT_INQUIRY_RESULT and EVT_INQUIRY_COMPLETE. The specific codes to use for each command and event are defined in the specifications and in the BlueZ source code."""
@@ -421,7 +436,7 @@ class BeaconPi(object):
         AD_TYPE_FLAG = 0x01     # Type of AD structure, 0x01 tells that an AD Flags structure will follow
         # list of ADTYPE: https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
         AD_DATA_FLAG = 12    # Flags data LE General Discoverable
-        ''' # Flags value 12 = 0xc = 000001100  
+        ''' # Flags value 12 = 0xc = 000 000110  (#bit: 765 43210)
         bit 0 (OFF) LE Limited Discoverable Mode
         bit 1 (ON) LE General Discoverable Mode
         bit 2 (ON) BR/EDR Not Supported
