@@ -6,5 +6,5 @@ a.start_le_scan()
 print("Le scan enabled")
 while True:
     a.parse_events(5)
-    
+    a.send_ack(0, 0)
 

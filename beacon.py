@@ -24,7 +24,8 @@ OGF_LE_CTL = 0x08
 OCF_LE_SET_SCAN_PARAMETERS = 0x000B
 OCF_LE_SET_SCAN_ENABLE = 0x000C
 OCF_LE_CREATE_CONN = 0x000D
-
+OCF_LE_SET_ADVERTISING_DATA = 0x0008
+OCF_LE_SET_ADVERTISING_ENABLE = 0x000A
 LE_ROLE_MASTER = 0x00
 LE_ROLE_SLAVE = 0x01
 
@@ -49,6 +50,9 @@ ADV_SCAN_RSP = 0x04  # scan response
 CONNECT_REQ = 0x05  # connection request
 ADV_DISCOVER_IND = 0x06  # scannable undirected advertising
 BEACON_TYPE_CODE = 0xBEAC # Alt Beacon identifier
+
+ADV_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF
+COMPANY_ID = 0x8888
 
 class BeaconPi(object):
     """A general class useful for handling beacon"""
@@ -315,9 +319,7 @@ class BeaconPi(object):
 
     def verify_beacon_packet(self, report):
         result = False
-        # check payload length (31byte)
-        ADV_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF
-        COMPANY_ID = 0x8888
+        # check payload length (28byte)
         if (report["report_metadata_length"] != 28):
             return result
         # check Company ID (LEL = 0x8888) $4,5:7 
@@ -407,6 +409,48 @@ class BeaconPi(object):
                 continue
             print("\t%s: %s" % (k, v))
         print("")
+    
+    def le_set_advertising_data(self, adv_data):
+        # Change filter/mode TODO
+        # LE Set Advertising Data ->
+        adv_len = 28
+        
+        cmd_pkt = struct.pack(">BB", adv_len, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
+        cmd_pkt += struct.pack("<H", COMPANY_ID)
+        cmd_pkt += struct.pack(">H", BEACON_TYPE_CODE)
+        # Custom values begins here
+        cmd_data_payload = struct.pack(">Q", adv_data["counter"])
+        cmd_data_payload += struct.pack(">BBBh", adv_data["cmd_type"], adv_data["cmd_class"], adv_data["cmd_opcode"], adv_data["cmd_params"])
+        cmd_data_payload += adv_data.get("bitmap", 0xFF)
+        cmd_data_payload += adv_data.get("RES1", 0x00)
+        cmd_data_payload += adv_data.get("RES2", 0x00)
+        cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload)
+        # Add the encrypted payload
+        cmd_pkt += cmd_data_payload_enc
+        cmd_pkt += struct.pack(">H", adv_data["user_id"])
+        cmd_pkt += struct.pack(">B", adv_data["obj_category"], adv_data["obj_id"])
+        # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
+        # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
+        return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
+
+    def le_set_advertising_status(self, enable = True):
+        
+        if enable:
+            enable_byte = 0x01
+        else:
+            enable_byte = 0x00
+        # Create the structure needed for the parameters of the LE SET SCAN ENABLE hci command
+        cmd_pkt = struct.pack("<B", enable_byte)  # LittleEndian(unsigned char, unsigned char)
+        # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
+        # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
+        return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_ENABLE, cmd_pkt)
+        # Response? return status: 0x00 if command was successful!
+
+    def send_ack(self, user_id, counter):
+        adv_data = {"counter": counter, "cmd_type": 0xFF, "cmd_class": 0xFF, "cmd_opcode":0xFF, "cmd_params": user_id}
+        # Need to disable scan?
+        self.le_set_advertising_data(adv_data)
+        # Need to reenable scan?
 
 # getsockopt(level, optname[, buflen]) -- get socket options\n\
 """
