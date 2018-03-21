@@ -5,6 +5,8 @@ a.hci_le_set_scan_parameters()
 a.start_le_scan()
 print("Le scan enabled")
 while True:
-    a.parse_events(5)
     a.send_ack(0, 0)
+    a.le_set_advertising_status(enable=True)
+    a.parse_events(5)
+    
 
