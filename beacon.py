@@ -53,6 +53,7 @@ BEACON_TYPE_CODE = 0xBEAC # Alt Beacon identifier
 
 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF
 COMPANY_ID = 0x8888
+ADV_RSSI_VALUE = -59
 
 class BeaconPi(object):
     """A general class useful for handling beacon"""
@@ -429,6 +430,7 @@ class BeaconPi(object):
         cmd_pkt += cmd_data_payload_enc
         cmd_pkt += struct.pack(">H", adv_data["user_id"])
         cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
+        cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
         print(cmd_pkt.hex())
