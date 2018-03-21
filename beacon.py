@@ -45,7 +45,9 @@ EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE = 0x04
 # payload: can contain user-defined data in payload unlike a directed packet
 ADV_IND = 0x00  # connectable undirected advertising event
 ADV_DIRECT_IND = 0x01  # connectable directed advertising event
-ADV_NONCONN_IND = 0x02  # non-connectable undirected advertising event
+ADV_SCAN_IND = 0x02
+ADV_NONCONN_IND = 0x03  # non-connectable undirected advertising event
+
 SCAN_REQ = 0x03  # scan request
 ADV_SCAN_RSP = 0x04  # scan response
 CONNECT_REQ = 0x05  # connection request
