@@ -121,7 +121,9 @@ class BeaconPi(object):
         Scanning_Filter_Policy = 0x00  # Accept all adv packets except directed adv packets not addressed to this device (default)
         cmd_pkt = struct.pack("BHHBB", LE_Scan_Type, LE_Scan_Interval, LE_Scan_Window, Own_Address_Type,
                               Scanning_Filter_Policy)  # LittleEndian(unsigned char, unsigned char, ..)
-        return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
+        res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
+        print(res)
+        return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: when the user needs to receive the data as fast as possible, make sure that scanning window is more than the advertising interval + 10ms to guarantee discovery.
 
@@ -135,7 +137,9 @@ class BeaconPi(object):
         peer_address_type = 0x00
         cmd_pkt = struct.pack("HHBBB", advertising_interval_min, advertising_interval_min, advertising_type, own_address_type,
                               peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
-        return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
+        res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
+        print(res)
+        return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: If the advertising interval range provided by the Host (Advertising_Interval_Min, Advertising_Interval_Max) is outside the advertising interval range supported by the Controller, then the Controller shall return the Unsupported Feature or Parameter Value (0x11) error code.
 
