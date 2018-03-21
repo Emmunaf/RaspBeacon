@@ -428,7 +428,7 @@ class BeaconPi(object):
         # Add the encrypted payload
         cmd_pkt += cmd_data_payload_enc
         cmd_pkt += struct.pack(">H", adv_data["user_id"])
-        cmd_pkt += struct.pack(">B", adv_data["obj_category"], adv_data["obj_id"])
+        cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
@@ -447,7 +447,7 @@ class BeaconPi(object):
         # Response? return status: 0x00 if command was successful!
 
     def send_ack(self, user_id, counter):
-        adv_data = {"counter": counter, "cmd_type": 0xFF, "cmd_class": 0xFF, "cmd_opcode":0xFF, "cmd_params": user_id}
+        adv_data = {"counter": counter, "cmd_type": 0xFF, "cmd_class": 0xFF, "cmd_opcode":0xFF, "cmd_params": user_id, "user_id": user_id, "obj_category": 0x00, "obj_id": 0x00}
         # Need to disable scan?
         self.le_set_advertising_data(adv_data)
         # Need to reenable scan?
