@@ -415,11 +415,12 @@ class BeaconPi(object):
         # Change filter/mode TODO
         # LE Set Advertising Data ->
         # Advertising Data Flags (not part of AltBeacon standard)
+        AD_TOT_LEN = 0x1f
         AD_LENGHT_FLAG = 0x02   # Number of AD flag structure
         AD_TYPE_FLAG = 0x01     # Type of AD structure as Flags type
         AD_DATA_FLAG = 0x1a    # Flags data LE General Discoverable
         
-        adv_header_flags = struct.pack(">BBB", AD_LENGHT_FLAG, AD_TYPE_FLAG, AD_DATA_FLAG)
+        adv_header_flags = struct.pack(">BBBB", AD_TOT_LEN, AD_LENGHT_FLAG, AD_TYPE_FLAG, AD_DATA_FLAG)
 
         AD_DATA_LEN = 27 # Lenght of advertisement (for ALTBeaconstandard = 0x1b)
         cmd_pkt = struct.pack(">BB", AD_DATA_LEN, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
