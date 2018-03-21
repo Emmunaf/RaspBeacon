@@ -431,6 +431,7 @@ class BeaconPi(object):
         cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
+        print(cmd_pkt.hex())
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
 
     def le_set_advertising_status(self, enable = True):
