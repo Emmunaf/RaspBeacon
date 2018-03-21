@@ -421,7 +421,7 @@ class BeaconPi(object):
         # Custom values begins here
         cmd_data_payload = struct.pack(">Q", adv_data["counter"])
         cmd_data_payload += struct.pack(">BBBh", adv_data["cmd_type"], adv_data["cmd_class"], adv_data["cmd_opcode"], adv_data["cmd_params"])
-        cmd_data_payload += adv_data.get("bitmap", struct.pack(">B"(0xFF)))
+        cmd_data_payload += adv_data.get("bitmap", struct.pack("B", (0xFF)))
         cmd_data_payload += struct.pack(">B", adv_data.get("RES1", 0x00))
         cmd_data_payload += struct.pack(">B", adv_data.get("RES2", 0x00))
         cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload)
