@@ -31,9 +31,9 @@ class SmartObject(object):
 
     def get_iv(self, user_id):
         if not user_id in self.last_users:
-            self.parse_counter(user_id)
+            self.parse_iv(user_id)
         elif not self.last_users[user_id].get('iv', False):
-            self.parse_counter(user_id)
+            self.parse_iv(user_id)
         return self.last_users[user_id]['iv']
 
     def register_object(self):
