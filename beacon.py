@@ -475,6 +475,7 @@ class BeaconPi(object):
         cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
         cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
         cmd_pkt = adv_header_flags + cmd_pkt
+        print(cmd_pkt.hex()) # TODELETE
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
