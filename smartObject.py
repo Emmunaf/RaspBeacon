@@ -8,11 +8,12 @@ from AESCipher import AESCipher
 class SmartObject(object):
     """A class used for handling SmartObjects"""
 
-    def __init__(self, object_id=-1):
+    def __init__(self, object_id=-1, hci_device=0):
         if object_id == -1:  # Check configurationFile TODO
             object_id = self.register_object
         self.object_id = object_id
         self.last_users = UpdateOrderedDict()
+        self.hci_device = hci_device
 
     def get_token(self, user_id):
         if not user_id in self.last_users:
@@ -85,7 +86,7 @@ class SmartObject(object):
             self.last_users[user_id] = user_dict
 
     def start_listen(self):
-        beacon = BeaconPi()
+        beacon = BeaconPi(self.hci_device)  # HCIDEVICE
         sock = beacon.open_socket()
         beacon.hci_le_set_scan_parameters()
         beacon.start_le_scan()
@@ -99,11 +100,14 @@ class SmartObject(object):
             for smartbeacon in smartbeacon_list:
                 if smartbeacon['minor'] == self.object_id:  # minor is id_obj
                     clear_user_id = smartbeacon['major']  # clear, not inside encr. payload
-                    beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
-                    sending_ack = True
+                    if self.parse_smartbeacon(smartbeacon):
+                        if not smartbeacon['is_ack']:
+                            beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
+                            print("Sent ack to"+str(clear_user_id))
+                            sending_ack = True
 
     def parse_smartbeacon(self, report):
-        # Unpack all field and return a dict with user_id and so on
+        # Unpack all field and return True if packet is valid, and update report dict
         if len(report["payload_encrypted_data"]) == 16:
             report["decrypted_payload"] = self.decrypt_payload(report["payload_encrypted_data"], report['major'])
             dec_payload = report["decrypted_payload"]
@@ -114,7 +118,8 @@ class SmartObject(object):
             'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2, 'is_ack': False}
             if self.verify_ack(report['smartbeacon']):
                 report['smartbeacon']['is_ack'] = True
-    
+            #TODO: Valid check, if counter_received == counter_smart_object, else return False
+            return True
     def verify_ack(self, smartbeacon):
         """If it's an ack, smartbeacon['params'] contains the user_id"""
         return (smartbeacon['cmd_type'],  smartbeacon['cmd_class'], smartbeacon['cmd_params']) == (0xFF, 0xFF, 0xFF)
