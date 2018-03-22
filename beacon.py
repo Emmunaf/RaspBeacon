@@ -140,7 +140,7 @@ class BeaconPi(object):
         filter_policy = 0x00
         cmd_pkt = struct.pack("<HHBBB", advertising_interval_min, advertising_interval_max, advertising_type, own_address_type,
                               peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
-        cmd_pkt += struct.pack("<BBBBBB", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)  # Peer_addr =00000
+        cmd_pkt += struct.pack("<6B", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)  # Peer_addr =00000
         cmd_pkt += struct.pack("<BB", channels_map, filter_policy)  # All channels
         print(cmd_pkt.hex())
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
@@ -320,8 +320,8 @@ class BeaconPi(object):
                 minor, = struct.unpack(">H", bytes(pkt[report_pkt_offset - 5: report_pkt_offset - 3]))
                 report["major"] = major
                 report["minor"] = minor
-                if len(report["payload_encrypted_data"]) == 16:
-                    report["decrypted_payload"] = self.decrypt_payload(report["payload_encrypted_data"])
+                #if len(report["payload_encrypted_data"]) == 16:
+                #    report["decrypted_payload"] = self.decrypt_payload(report["payload_encrypted_data"])
                 # print("MAC address: ", self.packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                 txpower_2_complement, = struct.unpack("b", bytes([pkt[report_pkt_offset - 2]]))
                 # print("(Unknown):", txpower)
@@ -366,13 +366,15 @@ class BeaconPi(object):
         result = True
         return result
 
-    def parse_events(self, loop_count=10):
+    def parse_events(self, loop_count=10, restore_filter = False):
         # Save the current filter, for restoring later.
-        old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
+        if restore_filter:
+            old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
         flt = bluez.hci_filter_new()
         bluez.hci_filter_all_events(flt)
         bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
+        filtered_reports = []
         #print("Waiting for socket")
         pkt = self.hci_sock.recv(255)
         
@@ -386,13 +388,15 @@ class BeaconPi(object):
                     self.print_report(report, pkt)
 
             for report in parsed_packet["advertising_reports"]:
-                # if (self.verify_smart_beacon_packet(report)):
-                # If match our format we should do something
+                # If match our format we should save them
                 if self.verify_beacon_packet(report):
-                    self.print_report(report, pkt)
+                    filtered_reports.append(report)
                 pass
-        self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
+        if restore_filter:
+            self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
+        return filtered_reports
 
+    #No needed TODO
     def decrypt_payload(self, pkt):
         AESkey = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
         AESiv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
@@ -401,7 +405,7 @@ class BeaconPi(object):
         decrypted_bytes = aesc.decrypt(pkt)
         # decrypted_bytes.hex()
         return decrypted_bytes
-
+    #No needed TODO
     def encrypt_payload(self, pkt):
         AESkey = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
         AESiv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
@@ -493,6 +497,7 @@ class BeaconPi(object):
         # Need to disable scan?
         self.le_set_advertising_data(adv_data)
         # Need to reenable scan?
+        # Need to REMOVE ADVERTISING DATA after some time
 
 # getsockopt(level, optname[, buflen]) -- get socket options\n\
 """
