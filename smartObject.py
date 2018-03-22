@@ -48,16 +48,19 @@ class SmartObject(object):
     def parse_token(self, user_id):
         """A method that asks to SmartCore (DB) a specified token from a user_id"""
         token = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'  # TODO
+        self.last_users[user_id]['token'] = token
         return token  # TODO
 
     def parse_counter(self, user_id):
         """A method that asks to SmartCore (DB) a specified counter from a user_id"""
         counter = 0  # TODO
+        self.last_users[user_id]['counter'] = counter
         return counter
 
-    def parse_iv(self, iv):
+    def parse_iv(self, user_id):
         """A method that asks to SmartCore (DB) the iv for a known user_id"""
         iv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'  # TODO
+        self.last_users[user_id]['iv'] = iv
         return iv
 
     def set_token_from_uid(self, user_id, token):
