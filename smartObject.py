@@ -96,6 +96,17 @@ class SmartObject(object):
             self.last_users[user_id].update(user_dict)
         else:
             self.last_users[user_id] = user_dict
+        # In every case send update to DB
+        
+
+    def increase_counter(self, user_id):
+        """Increase counter by 1, handle 8byte counter"""
+        old_counter = self.get_counter(user_id)
+        if old_counter == 0xFFFFFFFFFFFFFFFF:
+            new_counter = 0x00
+        else:
+            new_counter += 1
+        self._set_counter_from_uid(user_id, new_counter)
 
     def start_listen(self):
         beacon = BeaconPi(self.hci_device)  # HCIDEVICE
@@ -130,8 +141,19 @@ class SmartObject(object):
             res1, res2 = struct.unpack(">BB", dec_payload[14:16])
             report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class, 'cmd_bitmask': cmd_bitmask,
             'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2, 'is_ack': False}
-            if self.verify_ack(report['smartbeacon']):
+            if self.verify_ack(report['smartbeacon']):  # is an ack?
+                user_id = report['smartbeacon']['user_id']
+                counter_received = report['smartbeacon']['counter']
                 report['smartbeacon']['is_ack'] = True
+                if counter_received == self.get_counter(user_id):
+                    # New packet
+                    self.increase_counter(user_id)
+                elif report['smartbeacon']['counter'] == self.get_counter(report['smartbeacon']['user_id'])-1:
+                    # Duplicated packet
+                    pass
+                else:  # Counter not sincronized
+                    return False
+                # If it is an ack, need to increase counter: if not already done:
             #TODO: Valid check, if counter_received == counter_smart_object, else return False
             return True
     def verify_ack(self, smartbeacon):
