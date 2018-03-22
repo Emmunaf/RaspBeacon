@@ -17,20 +17,23 @@ class SmartObject(object):
 
     def get_token(self, user_id):
         if not user_id in self.last_users:
-            if not self.last_users[user_id].get('token'):
-                self.parse_token(user_id)
+            self.parse_token(user_id)
+        elif not self.last_users[user_id].get('token'):
+            self.parse_token(user_id)
         return self.last_users[user_id]['token']
 
     def get_counter(self, user_id):
         if not user_id in self.last_users:
-            if not self.last_users[user_id].get('counter'):
-                self.parse_counter(user_id)
+            self.parse_counter(user_id)
+        elif not self.last_users[user_id].get('counter'):
+            self.parse_counter(user_id)
         return self.last_users[user_id]['counter']
 
     def get_iv(self, user_id):
         if not user_id in self.last_users:
-            if not self.last_users[user_id].get('iv'):
-                self.parse_counter(user_id)
+            self.parse_counter(user_id)
+        elif not self.last_users[user_id].get('iv'):
+            self.parse_counter(user_id)
         return self.last_users[user_id]['iv']
 
     def register_object(self):
