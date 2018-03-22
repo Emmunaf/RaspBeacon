@@ -113,7 +113,7 @@ class SmartObject(object):
                 if smartbeacon['minor'] == self.object_id:  # minor is id_obj
                     clear_user_id = smartbeacon['major']  # clear, not inside encr. payload
                     if self.parse_smartbeacon(smartbeacon):
-                        if not smartbeacon['is_ack']:
+                        if not smartbeacon['smartbeacon'].get('is_ack', False):
                             beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
                             print("Sent ack to"+str(clear_user_id))
                             sending_ack = True
@@ -134,7 +134,7 @@ class SmartObject(object):
             return True
     def verify_ack(self, smartbeacon):
         """If it's an ack, smartbeacon['params'] contains the user_id"""
-        return (smartbeacon['cmd_type'],  smartbeacon['cmd_class'], smartbeacon['cmd_params']) == (0xFF, 0xFF, 0xFF)
+        return (smartbeacon['cmd_type'],  smartbeacon['cmd_class'], smartbeacon['cmd_opcode']) == (0xFF, 0xFF, 0xFF)
 
     def remove_duplicates_list(self, target_list):
         """Remove duplicates dict from a list of dict"""
