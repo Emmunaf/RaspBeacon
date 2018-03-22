@@ -113,7 +113,7 @@ class SmartObject(object):
                 if smartbeacon['minor'] == self.object_id:  # minor is id_obj
                     clear_user_id = smartbeacon['major']  # clear, not inside encr. payload
                     if self.parse_smartbeacon(smartbeacon):
-                        if not smartbeacon['smartbeacon'].get('is_ack', False):
+                        if not smartbeacon['smartbeacon']['is_ack']:
                             beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
                             print("Sent ack to"+str(clear_user_id))
                             sending_ack = True
