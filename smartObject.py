@@ -124,8 +124,8 @@ class SmartObject(object):
             report["decrypted_payload"] = self.decrypt_payload(report["payload_encrypted_data"], report['major'])
             dec_payload = report["decrypted_payload"]
             counter, = struct.unpack(">Q",dec_payload[0:8])
-            cmd_type, cmd_class, cmd_opcode, cmd_params, cmd_bitmask = struct.unpack(">BBBhB", dec_payload[8:13])
-            res1, res2 = struct.unpack(">BB", dec_payload[13:15])
+            cmd_type, cmd_class, cmd_opcode, cmd_params, cmd_bitmask = struct.unpack(">BBBhB", dec_payload[8:14])
+            res1, res2 = struct.unpack(">BB", dec_payload[14:16])
             report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class, 'cmd_bitmask': cmd_bitmask,
             'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2, 'is_ack': False}
             if self.verify_ack(report['smartbeacon']):
