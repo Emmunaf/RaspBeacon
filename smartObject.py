@@ -126,7 +126,7 @@ class SmartObject(object):
             counter, = struct.unpack(">Q",dec_payload[0:8])
             cmd_type, cmd_class, cmd_opcode, cmd_params, cmd_bitmask = struct.unpack(">BBBhB", dec_payload[8:13])
             res1, res2 = struct.unpack(">BB", dec_payload[13:15])
-            report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class, 'cmd_bitmask': cmd_bitmask
+            report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class, 'cmd_bitmask': cmd_bitmask,
             'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2, 'is_ack': False}
             if self.verify_ack(report['smartbeacon']):
                 report['smartbeacon']['is_ack'] = True
