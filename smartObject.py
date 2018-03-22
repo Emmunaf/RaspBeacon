@@ -116,6 +116,7 @@ class SmartObject(object):
                         if not smartbeacon['smartbeacon']['is_ack']:
                             beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
                             print("Sent ack to"+str(clear_user_id))
+                            print(smartbeacon)
                             sending_ack = True
 
     def parse_smartbeacon(self, report):
