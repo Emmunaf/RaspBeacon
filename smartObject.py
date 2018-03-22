@@ -16,21 +16,21 @@ class SmartObject(object):
         self.hci_device = hci_device
 
     def get_token(self, user_id):
-        if not user_id in self.last_users:
+        if user_id not in self.last_users:
             self.parse_token(user_id)
         elif not self.last_users[user_id].get('token'):
             self.parse_token(user_id)
         return self.last_users[user_id]['token']
 
     def get_counter(self, user_id):
-        if not user_id in self.last_users:
+        if user_id not in self.last_users:
             self.parse_counter(user_id)
         elif not self.last_users[user_id].get('counter'):
             self.parse_counter(user_id)
         return self.last_users[user_id]['counter']
 
     def get_iv(self, user_id):
-        if not user_id in self.last_users:
+        if user_id not in self.last_users:
             self.parse_iv(user_id)
         elif not self.last_users[user_id].get('iv', False):
             self.parse_iv(user_id)
@@ -47,7 +47,7 @@ class SmartObject(object):
 
     def parse_token(self, user_id):
         """A method that asks to SmartCore (DB) a specified token from a user_id"""
-        if not user_id in self.last_users:
+        if user_id not in self.last_users:
             self.last_users[user_id] = {}
         token = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'  # TODO
         self.last_users[user_id]['token'] = token
@@ -55,15 +55,17 @@ class SmartObject(object):
 
     def parse_counter(self, user_id):
         """A method that asks to SmartCore (DB) a specified counter from a user_id"""
-        if not user_id in self.last_users:
+        if user_id not in self.last_users:
             self.last_users[user_id] = {}
         counter = 0  # TODO
         self.last_users[user_id]['counter'] = counter
         return counter
 
     def parse_iv(self, user_id):
-        """A method that asks to SmartCore (DB) the iv for a known user_id"""
-        if not user_id in self.last_users:
+        """A method that asks to SmartCore (DB) the iv for a known user_id
+        :rtype: bytearray
+        """
+        if user_id not in self.last_users:
             self.last_users[user_id] = {}
         iv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'  # TODO
         self.last_users[user_id]['iv'] = iv
@@ -96,8 +98,7 @@ class SmartObject(object):
             self.last_users[user_id].update(user_dict)
         else:
             self.last_users[user_id] = user_dict
-        # In every case send update to DB
-
+            # In every case send update to DB
 
     def increase_counter(self, user_id):
         """Increase counter by 1, handle 8byte counter"""
@@ -105,7 +106,7 @@ class SmartObject(object):
         if old_counter == 0xFFFFFFFFFFFFFFFF:
             new_counter = 0x00
         else:
-            new_counter += 1
+            new_counter = old_counter+1
         self._set_counter_from_uid(user_id, new_counter)
 
     def start_listen(self):
@@ -127,8 +128,8 @@ class SmartObject(object):
                     if self.parse_smartbeacon(smartbeacon):
                         if not smartbeacon['smartbeacon']['is_ack']:
                             beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
-                            print("Sent ack to"+str(clear_user_id))
-                            #print(smartbeacon)
+                            print("Sent ack to" + str(clear_user_id))
+                            # print(smartbeacon)
                             sending_ack = True
 
     def parse_smartbeacon(self, report):
@@ -136,11 +137,13 @@ class SmartObject(object):
         if len(report["payload_encrypted_data"]) == 16:
             report["decrypted_payload"] = self.decrypt_payload(report["payload_encrypted_data"], report['major'])
             dec_payload = report["decrypted_payload"]
-            counter, = struct.unpack(">Q",dec_payload[0:8])
+            counter, = struct.unpack(">Q", dec_payload[0:8])
             cmd_type, cmd_class, cmd_opcode, cmd_params, cmd_bitmask = struct.unpack(">BBBhB", dec_payload[8:14])
             res1, res2 = struct.unpack(">BB", dec_payload[14:16])
-            report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class, 'cmd_bitmask': cmd_bitmask,
-            'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2, 'is_ack': False}
+            report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class,
+                                     'cmd_bitmask': cmd_bitmask,
+                                     'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2,
+                                     'is_ack': False}
             if self.verify_ack(report['smartbeacon']):  # is an ack?
                 user_id = report['smartbeacon']['user_id']
                 counter_received = report['smartbeacon']['counter']
@@ -148,19 +151,24 @@ class SmartObject(object):
                 if counter_received == self.get_counter(user_id):
                     # New packet
                     self.increase_counter(user_id)
-                elif report['smartbeacon']['counter'] == self.get_counter(report['smartbeacon']['user_id'])-1:
+                elif report['smartbeacon']['counter'] == self.get_counter(report['smartbeacon']['user_id']) - 1:
                     # Duplicated packet
                     pass
                 else:  # Counter not sincronized
                     return False
-                # If it is an ack, need to increase counter: if not already done:
-            #TODO: Valid check, if counter_received == counter_smart_object, else return False
+                    # If it is an ack, need to increase counter: if not already done:
+            # TODO: Valid check, if counter_received == counter_smart_object, else return False
             return True
-    def verify_ack(self, smartbeacon):
-        """If it's an ack, smartbeacon['params'] contains the user_id"""
-        return (smartbeacon['cmd_type'],  smartbeacon['cmd_class'], smartbeacon['cmd_opcode']) == (0xFF, 0xFF, 0xFF)
 
-    def remove_duplicates_list(self, target_list):
+    @staticmethod
+    def verify_ack(smartbeacon):
+        """Return true if the smartbeacon is an ACK.
+
+        Note: If it's an ack, smartbeacon['params'] contains the user_id"""
+        return (smartbeacon['cmd_type'], smartbeacon['cmd_class'], smartbeacon['cmd_opcode']) == (0xFF, 0xFF, 0xFF)
+
+    @staticmethod
+    def remove_duplicates_list(target_list):
         """Remove duplicates dict from a list of dict"""
 
         used_key = []
@@ -172,18 +180,18 @@ class SmartObject(object):
 
     def decrypt_payload(self, encrypt_payload, user_id):
         aeskey = self.get_token(user_id)
-        AESiv = self.get_iv(user_id)
+        aesiv = self.get_iv(user_id)
         aesc = AESCipher(aeskey)
-        aesc.set_iv(AESiv)
+        aesc.set_iv(aesiv)
         decrypted_bytes = aesc.decrypt(encrypt_payload)
         # decrypted_bytes.hex()
         return decrypted_bytes
 
     def encrypt_payload(self, decrypted_payload, user_id):
         aeskey = self.get_token(user_id)
-        AESiv = self.get_iv(user_id)
+        aesiv = self.get_iv(user_id)
         aesc = AESCipher(aeskey)
-        aesc.set_iv(AESiv)
+        aesc.set_iv(aesiv)
         encrypted_bytes = aesc.encrypt(decrypted_payload)
         return encrypted_bytes
 
