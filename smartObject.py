@@ -97,7 +97,7 @@ class SmartObject(object):
         else:
             self.last_users[user_id] = user_dict
         # In every case send update to DB
-        
+
 
     def increase_counter(self, user_id):
         """Increase counter by 1, handle 8byte counter"""
@@ -123,12 +123,12 @@ class SmartObject(object):
             for smartbeacon in smartbeacon_list:
                 if smartbeacon['minor'] == self.object_id:  # minor is id_obj
                     clear_user_id = smartbeacon['major']  # clear, not inside encr. payload
-                    print(smartbeacon)
+                    # print(smartbeacon)
                     if self.parse_smartbeacon(smartbeacon):
                         if not smartbeacon['smartbeacon']['is_ack']:
                             beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
                             print("Sent ack to"+str(clear_user_id))
-                            print(smartbeacon)
+                            #print(smartbeacon)
                             sending_ack = True
 
     def parse_smartbeacon(self, report):
