@@ -333,7 +333,7 @@ class BeaconPi(object):
             #result["advertising_reports"].append(report)
             if self.verify_beacon_packet(report):
                 result["advertising_reports"].append(report)
-                print(report["decrypted_payload"].hex())
+                # print(report["decrypted_payload"].hex())
         return result
 
     def get_companyid(self, pkt):
