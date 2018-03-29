@@ -239,6 +239,8 @@ class SmartCommands(object):
         """Return True if a command class is available"""
         if not isinstance(command_class, str):
             command_class = hex(command_class)
+        if not isinstance(command_type, str):
+            command_type = hex(command_type)
         if self.check_command_type(command_type):
             return command_class in self.commands[command_type]
         else:
@@ -246,13 +248,14 @@ class SmartCommands(object):
 
     def parse_command(self, smartbeacon):
         print(smartbeacon)
-        cmd_type = smartbeacon.get("cmd_type")
-        cmd_class = smartbeacon.get("cmd_class")
-        cmd_opcode = smartbeacon.get("cmd_opcode")
+        cmd_type = hex(smartbeacon.get("cmd_type"))
+        cmd_class = hex(smartbeacon.get("cmd_class"))
+        cmd_opcode = hex(smartbeacon.get("cmd_opcode"))
         cmd_params = smartbeacon.get("cmd_params")
         cmd_bitmask = smartbeacon.get("cmd_bitmask")
         if self.check_command_class(cmd_type, cmd_class):
             function_name = smartbeacon[cmd_type][cmd_class][cmd_opcode]
+            print(function_name)
             result = getattr(smartbeacon_command, function_name)()
         else:
             pass  # Send_invalid_command_packet()
