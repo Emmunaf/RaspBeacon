@@ -245,6 +245,7 @@ class SmartCommands(object):
             return False
 
     def parse_command(self, smartbeacon):
+        print(smartbeacon)
         cmd_type = smartbeacon.get("cmd_type")
         cmd_class = smartbeacon.get("cmd_class")
         cmd_opcode = smartbeacon.get("cmd_opcode")
