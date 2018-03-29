@@ -1,12 +1,12 @@
 {
     "cmd_type": [
-      "0xff",
+      "0xFF",
       "0x01",
       "0x02"
     ],
-    "0xff": { 
-      "0xff": {
-        "0xff": "ack"
+    "0xFF": { 
+      "0xFF": {
+        "0xFF": "ack"
       },
       "0x01": {
         "0x01":"ask_wifi_password"

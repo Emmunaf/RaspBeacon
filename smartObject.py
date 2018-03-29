@@ -228,6 +228,8 @@ class SmartCommands(object):
     def __init__(self, json_file):
         with open(json_file) as json_fp:
             self.commands = json.load(json_fp)
+
+        print(self.commands)
     
     def check_command_type(self, command_type):
         """Return True if a command type is available"""
