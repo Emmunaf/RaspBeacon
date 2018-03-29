@@ -253,6 +253,9 @@ class SmartCommands(object):
         cmd_opcode = hex(smartbeacon.get("cmd_opcode"))
         cmd_params = smartbeacon.get("cmd_params")
         cmd_bitmask = smartbeacon.get("cmd_bitmask")
+
+        function_name = smartbeacon[cmd_type][cmd_class][cmd_opcode]
+        print(function_name)
         if self.check_command_class(cmd_type, cmd_class):
             function_name = smartbeacon[cmd_type][cmd_class][cmd_opcode]
             print(function_name)
