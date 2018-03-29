@@ -60,9 +60,9 @@ class SmartObject(object):
         """A method that asks to SmartCore (DB) a specified counter from a user_id"""
         if user_id not in self.last_users:
             self.last_users[user_id] = {}
-        counter = 0  # TODO
-        self.last_users[user_id]['counter'] = counter
-        return counter
+            counter = 0 # TODO
+            self.last_users[user_id]['counter'] = counter
+        return self.last_users[user_id]['counter']
 
     def parse_iv(self, user_id):
         """A method that asks to SmartCore (DB) the iv for a known user_id
