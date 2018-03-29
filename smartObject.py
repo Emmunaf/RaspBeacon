@@ -257,7 +257,7 @@ class SmartCommands(object):
 
         function_name = self.commands[cmd_type][cmd_class][cmd_opcode]
         if self.check_command_class(cmd_type, cmd_class):
-            function_name = smartbeacon[cmd_type][cmd_class][cmd_opcode]
+            function_name = self.commands[cmd_type][cmd_class][cmd_opcode]
             print(function_name)
             result = getattr(smartbeacon_command, function_name)()
         else:
