@@ -167,7 +167,7 @@ class SmartObject(object):
                     return False
                     # If it is an ack, need to increase counter: if not already done:
             else:
-                self.increase_counter(user_id)
+                self.increase_counter(report['smartbeacon']['user_id'])
             # TODO: Valid check, if counter_received == counter_smart_object, else return False
             return True
 
