@@ -60,6 +60,8 @@ class SmartObject(object):
         """A method that asks to SmartCore (DB) a specified counter from a user_id"""
         if user_id not in self.last_users:
             self.last_users[user_id] = {}
+        if 'counter' not in self.last_users[user_id]:
+            # If not in cache_dict, get from DB
             counter = 0 # TODO
             self.last_users[user_id]['counter'] = counter
         return self.last_users[user_id]['counter']
