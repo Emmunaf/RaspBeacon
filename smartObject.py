@@ -64,7 +64,6 @@ class SmartObject(object):
             # If not in cache_dict, get from DB
             counter = 0 # TODO
             self.last_users[user_id]['counter'] = counter
-        print(self.last_users)
         return self.last_users[user_id]['counter']
 
     def parse_iv(self, user_id):
@@ -122,7 +121,7 @@ class SmartObject(object):
         beacon.start_le_scan()
         beacon.hci_set_advertising_parameters()
         beacon.le_set_advertising_status(enable=True)  # Start adv.
-        print("Le scan enabled")
+        print("Waiting for smartbeacon")
         smart_command_handler = SmartCommands("command_list.json")
         sending_ack = False
         while True:
@@ -163,7 +162,7 @@ class SmartObject(object):
                 elif report['smartbeacon']['counter'] == self.get_counter(report['smartbeacon']['user_id']) - 1:
                     # Duplicated packet
                     print("Duplicated packet")
-                    pass
+                    return False
                 else:  # Counter not sincronized
                     return False
                     # If it is an ack, need to increase counter: if not already done:
@@ -235,8 +234,7 @@ class SmartCommands(object):
     def __init__(self, json_file):
         with open(json_file) as json_fp:
             self.commands = json.load(json_fp)
-
-        print(self.commands)
+        # print(self.commands)
     
     def check_command_type(self, command_type):
         """Return True if a command type is available"""
@@ -265,7 +263,7 @@ class SmartCommands(object):
         function_name = self.commands[cmd_type][cmd_class][cmd_opcode]
         if self.check_command_class(cmd_type, cmd_class):
             function_name = self.commands[cmd_type][cmd_class][cmd_opcode]
-            print(function_name)
+            # print(function_name)
             result = getattr(smartbeacon_command, function_name)()
         else:
             pass  # Send_invalid_command_packet()
