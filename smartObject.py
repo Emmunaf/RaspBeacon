@@ -58,12 +58,13 @@ class SmartObject(object):
 
     def parse_counter(self, user_id):
         """A method that asks to SmartCore (DB) a specified counter from a user_id"""
-        if user_id not in self.last_users:
+        if user_id not in self.last_users:  # Add to last users list if new
             self.last_users[user_id] = {}
-        if 'counter' not in self.last_users[user_id]:
+        if 'counter' not in self.last_users[user_id]:  # Add counter key if not exist
             # If not in cache_dict, get from DB
             counter = 0 # TODO
             self.last_users[user_id]['counter'] = counter
+        print(self.last_users)
         return self.last_users[user_id]['counter']
 
     def parse_iv(self, user_id):
