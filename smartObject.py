@@ -232,24 +232,24 @@ class SmartCommands(object):
     def check_command_type(self, command_type):
         """Return True if a command type is available"""
         if not isinstance(command_type, str):
-            command_type = int_to_hex_with0(command_type)
+            command_type = self.int_to_hex_with0(command_type)
         return command_type in self.commands
     
     def check_command_class(self, command_type, command_class):
         """Return True if a command class is available"""
         if not isinstance(command_class, str):
-            command_class = int_to_hex_with0(command_class)
+            command_class = self.int_to_hex_with0(command_class)
         if not isinstance(command_type, str):
-            command_type = int_to_hex_with0(command_type)
+            command_type = self.int_to_hex_with0(command_type)
         if self.check_command_type(command_type):
             return command_class in self.commands[command_type]
         else:
             return False
 
     def parse_command(self, smartbeacon):
-        cmd_type = int_to_hex_with0(smartbeacon.get("cmd_type"))
-        cmd_class = int_to_hex_with0(smartbeacon.get("cmd_class"))
-        cmd_opcode = int_to_hex_with0(smartbeacon.get("cmd_opcode"))
+        cmd_type = self.int_to_hex_with0(smartbeacon.get("cmd_type"))
+        cmd_class = self.int_to_hex_with0(smartbeacon.get("cmd_class"))
+        cmd_opcode = self.int_to_hex_with0(smartbeacon.get("cmd_opcode"))
         cmd_params = smartbeacon.get("cmd_params")
         cmd_bitmask = smartbeacon.get("cmd_bitmask")
 
@@ -267,4 +267,4 @@ class SmartCommands(object):
         """Return string Hex form (with prefix0)from int.
         
         Example: 1 -> 0x01"""
-        strHex = "0x%0.2X" % int_16
+        return "0x%0.2X" % int_16
