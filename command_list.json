@@ -1,0 +1,37 @@
+{
+    "cmd_type": [
+      "0xff",
+      "0x01",
+      "0x02"
+    ],
+    "0xff": { 
+      "0xff": {
+        "0xff": "ack"
+      },
+      "0x01": {
+        "0x01":"ask_wifi_password"
+      },
+      "0x00": {
+        "0x00": "Invalid command",
+        "0x01": "Insufficient permission"
+      }
+    },
+    "0x01": { 
+      "0x00": {
+        "0x01": "sb_open",
+        "0x02": "turn",
+        "0x03": "rotate"
+      },
+      "0x01": {
+        "0x01":"sb_timer"
+      },
+      "0x02": {
+        "0x01": "set_temperature",
+        "0x02": "set_volume"
+      }
+    },
+    "0x03": {
+      "0x01": "get_temperature",
+      "0x02": "get_volume"
+    }
+  }

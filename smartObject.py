@@ -1,10 +1,13 @@
 from collections import OrderedDict
 import struct
+import json
+
 
 from beacon import BeaconPi
 from AESCipher import AESCipher
+import smartbeacon_command
 
-
+#atexit.register
 class SmartObject(object):
     """A class used for handling SmartObjects"""
 
@@ -117,6 +120,7 @@ class SmartObject(object):
         beacon.hci_set_advertising_parameters()
         beacon.le_set_advertising_status(enable=True)  # Start adv.
         print("Le scan enabled")
+        smart_command_handler = SmartCommands("command_list.json")
         sending_ack = False
         while True:
             smartbeacon_list = beacon.parse_events(5)
@@ -131,6 +135,8 @@ class SmartObject(object):
                             print("Sent ack to" + str(clear_user_id))
                             # print(smartbeacon)
                             sending_ack = True
+                            # Execute action
+                            smart_command_handler.parse_command(smartbeacon['smartbeacon'])
 
     def parse_smartbeacon(self, report):
         # Unpack all field and return True if packet is valid, and update report dict
@@ -216,3 +222,35 @@ class UpdateOrderedDict(OrderedDict):
 
         # lastusers= UpdateOrderedDict{id_user: [userdict]}
         # userdict = {'token': , 'iv': , 'counter'}
+
+class SmartCommands(object):
+
+    def __init__(self, json_file):
+        self.commands = json.load(json_file)
+    
+    def check_command_type(self, command_type):
+        """Return True if a command type is available"""
+        if not isinstance(command_type, str):
+            command_type = hex(command_type)
+        return command_type in self.commands
+    
+    def check_command_class(self, command_type, command_class):
+        """Return True if a command class is available"""
+        if not isinstance(command_class, str):
+            command_class = hex(command_class)
+        if self.check_command_type(command_type):
+            return command_class in self.commands[command_type]
+        else:
+            return False
+
+    def parse_command(self, smartbeacon):
+        cmd_type = smartbeacon.get("cmd_type")
+        cmd_class = smartbeacon.get("cmd_class")
+        cmd_opcode = smartbeacon.get("cmd_opcode")
+        cmd_params = smartbeacon.get("cmd_params")
+        cmd_bitmask = smartbeacon.get("cmd_bitmask")
+        if self.check_command_class(cmd_type, cmd_class):
+            function_name = smartbeacon[cmd_type][cmd_class][cmd_opcode]
+            result = getattr(smartbeacon_command, function_name)()
+        else:
+            pass  # Send_invalid_command_packet()
