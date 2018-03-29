@@ -152,8 +152,8 @@ class SmartObject(object):
             report['smartbeacon'] = {'counter': counter, 'cmd_type': cmd_type, 'cmd_class': cmd_class,
                                      'cmd_bitmask': cmd_bitmask,
                                      'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2,
-                                     'is_ack': False}
-            if self.verify_ack(report['smartbeacon']):  # is an ack?
+                                     'is_ack': False, 'user_id': report['major']}
+            if not self.verify_ack(report['smartbeacon']):  # is an ack?
                 user_id = report['smartbeacon']['user_id']
                 counter_received = report['smartbeacon']['counter']
                 report['smartbeacon']['is_ack'] = True
@@ -166,8 +166,6 @@ class SmartObject(object):
                 else:  # Counter not sincronized
                     return False
                     # If it is an ack, need to increase counter: if not already done:
-            else:
-                self.increase_counter(report['smartbeacon']['user_id'])
             # TODO: Valid check, if counter_received == counter_smart_object, else return False
             return True
 
