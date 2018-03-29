@@ -156,19 +156,20 @@ class SmartObject(object):
             if not self.verify_ack(report['smartbeacon']):  # is an ack?
                 user_id = report['smartbeacon']['user_id']
                 counter_received = report['smartbeacon']['counter']
-                report['smartbeacon']['is_ack'] = True
                 if counter_received == self.get_counter(user_id):
                     # New packet
                     print("Counter is ok")
                     self.increase_counter(user_id)
                 elif report['smartbeacon']['counter'] == self.get_counter(report['smartbeacon']['user_id']) - 1:
                     # Duplicated packet
-                    print("Duplciated packet")
+                    print("Duplicated packet")
                     pass
                 else:  # Counter not sincronized
                     return False
                     # If it is an ack, need to increase counter: if not already done:
             # TODO: Valid check, if counter_received == counter_smart_object, else return False
+            else:
+                report['smartbeacon']['is_ack'] = True
             return True
 
 
