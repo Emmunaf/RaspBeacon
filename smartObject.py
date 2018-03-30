@@ -125,7 +125,7 @@ class SmartObject(object):
         smart_command_handler = SmartCommands("command_list.json")
         sending_ack = False
         while True:
-            smartbeacon_list = beacon.parse_events(5)
+            smartbeacon_list = beacon.parse_events()
             self.remove_duplicates_list(smartbeacon_list)
             for smartbeacon in smartbeacon_list:
                 if smartbeacon['minor'] == self.object_id:  # minor is id_obj

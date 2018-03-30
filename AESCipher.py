@@ -7,8 +7,9 @@ Thanks to:
 '''
 '''
 Using IV for having always a different output also for the same input.
-The IV is also included in the output. In this way it can be used to decrypt the output.
-Note: you can use os.urandom(24) for generating an enough good random string 
+The IV is *NOT* included in the output.
+The AES CBC doesn't use the PKCS#7-padding. This garant 1 more byte in the decrypted_payload!
+Note: you can use os.urandom(24) for generating an enough good random bytes string 
 
 '''
 

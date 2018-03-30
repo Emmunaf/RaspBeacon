@@ -6,16 +6,50 @@ import bluetooth._bluetooth as bluez
 from AESCipher import AESCipher
 
 """
-BlueZ usage resource:
-https://people.csail.mit.edu/albert/bluez-intro/x682.html"""
+Python handler to send/receive SmartBeacon with SmartBeacon Protocol. 
 
+
+SmartBeacon can be seen as an upper layer on an AltBeacon-like standard (this was done to avoid compatibility issue).
+"""
+
+"""
+BlueZ usage resource:
+https://people.csail.mit.edu/albert/bluez-intro/x682.html
+SmartBeacon wire-format:
+    02      # Number of bytes that follow in *first* AD structure (Used for flag specification)
+    01      # Flags AD type # Flags of Advertisment event types (connectable, ...)
+    1A      # Flags value 0x1A = (000) 11010 # Flags used for letting know controller capabilities
+                bit 0 (OFF) LE Limited Discoverable Mode
+                bit 1 (ON) LE General Discoverable Mode
+                bit 2 (OFF) BR/EDR Not Supported
+                bit 3 (ON) Simultaneous LE and BR/EDR to Same Device Capable (controller)
+                bit 4 (ON) Simultaneous LE and BR/EDR to Same Device Capable (Host)
+                bit 5,6,7 unused
+
+    1B      #  0x1B = 27, Number of bytes that follow in second (and last) AD structure (Used for transmitting data)
+    FF      # Manufacturer specific data AD type
+    88 88   # Company identifier code (0x8888 == SmartBeaconCompany)
+    BE      # Byte 0 of AltBeacon advertisement indicator
+    AC      # Byte 1 of AltBeacon advertisement indicator
+    XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX # Encrypted_payload (AES CBC 256)
+        The 16byte encrypted_payload can be defined as follow (Big endian and starting from left)
+        0:7 (8Byte)     # Counter
+        8:14 (6Byte)    # Command
+        15:16 (2Byte)   # RES1, RES2 (Reserved) (set to 0 if not needed)
+    YY YY   # major == user_id
+    ZZ ZZ   # minor == obj_id
+    c5      # The 2's complement of the calibrated Tx Power (windowing system for bnetter throuput?)
+
+# The following terms are used many times, use this as resource.
 # Dict:
 # hci_sock is an open HCI socket
 # OGF is the Opcode Group Field
 # OCF is the Opcode Command Field
 # cmd_pkt contains the command parameters
 # Note1: For the Link Control commands, the OGF is defined as 0x01. For the LE Controller Commands, the OGF code is defined as 0x08.
-# Note2:  the reversed byte order (multibyte values in BLE packets are in little-endian order).
+# Note2: the reversed byte order of BLE(multibyte values in BLE packets are in little-endian).
+"""
+
 LE_META_EVENT = 0x3e
 LE_PUBLIC_ADDRESS = 0x00
 LE_RANDOM_ADDRESS = 0x01
@@ -352,7 +386,11 @@ class BeaconPi(object):
         result = True
         return result
 
-    def parse_events(self, loop_count=10, restore_filter=False):
+    def parse_events(self, restore_filter=False):
+        """Method used to parse an event, save it just if matching our filter.
+        
+        
+        """
         # Save the current filter, for restoring later.
         if restore_filter:
             old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
@@ -377,7 +415,6 @@ class BeaconPi(object):
                 # If match our format we should save them
                 if self.verify_beacon_packet(report):
                     filtered_reports.append(report)
-                pass
         if restore_filter:
             self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
         return filtered_reports
@@ -401,8 +438,7 @@ class BeaconPi(object):
         encrypted_bytes = aesc.encrypt(pkt)
         return encrypted_bytes
 
-    def packet_as_hex_string(self, pkt, spacing=False,
-                             capitalize=False):
+    def packet_as_hex_string(self, pkt, spacing=False, capitalize=False):
         packet = ""
         space = ""
         if spacing:
@@ -431,7 +467,6 @@ class BeaconPi(object):
     def le_set_advertising_data(self, adv_data):
         # Change filter/mode TODO
         # LE Set Advertising Data ->
-        # Advertising Data Flags (not part of AltBeacon standard)
         AD_TOT_LEN = 0x1f
         AD_LENGHT_FLAG = 0x02  # Number of AD flag structure
         AD_TYPE_FLAG = 0x01  # Type of AD structure, 0x01 tells that an AD Flags structure will follow
@@ -469,12 +504,15 @@ class BeaconPi(object):
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
 
     def le_set_advertising_status(self, enable=True):
-
+        """Call LE SET ADVERTISING from hci_sock. 
+        
+        This should be called to enable the broadcast of SmartBeacon
+        after setting the advertising with le_set_advertising_data()."""
         if enable:
             enable_byte = 0x01
         else:
             enable_byte = 0x00
-        # Create the structure needed for the parameters of the LE SET SCAN ENABLE hci command
+        # Create the structure needed for the parameters of the LE SET ADVERTISING hci command
         cmd_pkt = struct.pack("<B", enable_byte)  # LittleEndian(unsigned char, unsigned char)
         # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
         # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
@@ -501,30 +539,6 @@ class BeaconPi(object):
 # https://books.google.it/books?id=3nCuDgAAQBAJ&pg=PA198&lpg=PA198&dq=hci+protocol+META+EVENT&source=bl&ots=rLU4o_v7na&sig=4IE82kPP5vfr-ShewNbIuqD_K3g&hl=it&sa=X&ved=0ahUKEwiZldihnuzZAhWiDcAKHZPmAD4Q6AEILDAA#v=onepage&q=hci%20protocol%20META%20EVENT&f=false
 # http://rrbluetoothx.blogspot.it/2016/
 
-
-"""
- /*
-        IBeacon format found at http://stackoverflow.com/questions/18906988/what-is-the-ibeacon-bluetooth-profile
-        02 # Number of bytes that follow in first AD structure  # Just iBeacon
-        01 # Flags AD type # Just iBeacon
-        1A # Flags value 0x1A = 000011010 # Just iBeacon
-        # Alt beacon begins here
-        bit 0 (OFF) LE Limited Discoverable Mode
-        bit 1 (ON) LE General Discoverable Mode
-        bit 2 (OFF) BR/EDR Not Supported
-        bit 3 (ON) Simultaneous LE and BR/EDR to Same Device Capable (controller)
-        bit 4 (ON) Simultaneous LE and BR/EDR to Same Device Capable (Host)
-        1A # Number of bytes that follow in second (and last) AD structure
-        FF # Manufacturer specific data AD type
-        4C 00 # Company identifier code (0x004C == Apple)
-        02 # Byte 0 of iBeacon advertisement indicator
-        15 # Byte 1 of iBeacon advertisement indicator
-        e2 c5 6d b5 df fb 48 d2 b0 60 d0 f5 a7 10 96 e0 # iBeacon proximity uuid
-        00 00 # major
-        00 00 # minor
-        c5 # The 2's complement of the calibrated Tx Power
-    */
-"""
 
 """
 # Raw avertise packet data from Bluez scan
