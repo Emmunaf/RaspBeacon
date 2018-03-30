@@ -17,7 +17,11 @@ BlueZ usage resource:
 https://people.csail.mit.edu/albert/bluez-intro/x682.html
 SmartBeacon wire-format:
     02      # Number of bytes that follow in *first* AD structure (Used for flag specification)
-    01      # Flags AD type # Flags of Advertisment event types (connectable, ...)
+    01      # Flags AD type # Flags of Advertisment event types (see the following list)
+                # connectable: a scanner can start a connection after be notified by this event
+                # scannable: a scanner can start a scan request after receving one of these
+                # undirected: broadcast trasmission, no Bluetooth address is specified
+                # payload: can contain user-defined data in payload unlike a directed packet
     1A      # Flags value 0x1A = (000) 11010 # Flags used for letting know controller capabilities
                 bit 0 (OFF) LE Limited Discoverable Mode
                 bit 1 (ON) LE General Discoverable Mode
@@ -72,11 +76,6 @@ EVT_LE_CONN_UPDATE_COMPLETE = 0x03
 EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE = 0x04
 
 # Advertisment event types
-# Glossary:
-# connectable: a scanner can start a connection after be notified by this event
-# scannable: a scanner can start a scan request after receving one of these
-# undirected: broadcast trasmission, no Bluetooth address is specified
-# payload: can contain user-defined data in payload unlike a directed packet
 ADV_IND = 0x00  # connectable undirected advertising event
 ADV_DIRECT_IND = 0x01  # connectable directed advertising event
 ADV_SCAN_IND = 0x02
@@ -114,7 +113,7 @@ class BeaconPi(object):
 
     @staticmethod
     def packet2str(pkt):
-        """TODO the packet in readable hex format"""
+        """Return the packet in readable hex format from binary"""
         return pkt.hex()
 
     def start_le_scan(self):
@@ -150,13 +149,12 @@ class BeaconPi(object):
         """Set the parameters needed for a scan"""
 
         # old_filter = hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)  # when restore the filter?
-        le_scan_type = 0x00  # Passive Scanning. No scanning PDUs shall be sent (default)
-        le_scan_interval = 0x0010  # Range: 0x0004 to 0x4000 Default: 0x0010 (10 ms), Time = N * 0.625 ms
-        le_scan_window = 0x0010  # Duration of the LE scan. LE_Scan_Window <= LE_Scan_Interval
-        own_address_type = 0x01  # 0x01 - Random Device Address, 0x00 - Public Device Address (default)
-        scanning_filter_policy = 0x00  # Accept all adv packets except directed adv packets not addressed to this device (default)
-        cmd_pkt = struct.pack("<BHHBB", le_scan_type, le_scan_interval, le_scan_window, own_address_type,
-                              scanning_filter_policy)  # LittleEndian(unsigned char, unsigned char, ..)
+        le_scan_type = 0x00             # Passive Scanning. No scanning PDUs shall be sent (default)
+        le_scan_interval = 0x0010       # Range: 0x0004 to 0x4000 Default: 0x0010 (10 ms), Time = N * 0.625 ms
+        le_scan_window = 0x0010         # Duration of the LE scan. LE_Scan_Window <= LE_Scan_Interval
+        own_address_type = 0x01         # 0x01 - Random Device Address, 0x00 - Public Device Address (default)
+        scanning_filter_policy = 0x00   # Accept all adv packets except directed adv packets not addressed to this device (default)
+        cmd_pkt = struct.pack("<BHHBB", le_scan_type, le_scan_interval, le_scan_window, own_address_type, scanning_filter_policy)
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
         return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
@@ -165,20 +163,16 @@ class BeaconPi(object):
     def hci_set_advertising_parameters(self):
         """Set the parameters needed for a (quick/slow) scan"""
 
-        advertising_interval_min = 0x00A0  # Minimum advertising interval for undirected and low duty cycle directed advertising. 
-        advertising_interval_max = 0x00A8  # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
+        advertising_interval_min = 0x00A0   # Minimum advertising interval for undirected and low duty cycle directed advertising. 
+        advertising_interval_max = 0x00A8   # Maximum advertising interval, Range: 0x0020 to 0x4000|Default: N = 0x0800 (1.28 s)|Time = N * 0.625 ms|Time Range: 20 ms to 10.24 s
         advertising_type = ADV_NONCONN_IND  # Advertising Type([un]Connactable/[un]directed/...)
         own_address_type, peer_address_type = 0x00, 0x00  # 0x00 public, 0x01 random
         channels_map = 0x07
         filter_policy = 0x00
-        cmd_pkt = struct.pack("<HHBBB", advertising_interval_min, advertising_interval_max, advertising_type,
-                              own_address_type,
-                              peer_address_type)  # LittleEndian(unsigned char, unsigned char, ..)
+        cmd_pkt = struct.pack("<HHBBB", advertising_interval_min, advertising_interval_max, advertising_type, own_address_type, peer_address_type)
         cmd_pkt += struct.pack("<6B", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)  # Peer_addr =00000
         cmd_pkt += struct.pack("<BB", channels_map, filter_policy)  # All channels
-        print(cmd_pkt.hex())
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
-        print(res)
         return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
         # Note: If the advertising interval range provided by the Host (Advertising_Interval_Min, Advertising_Interval_Max) is outside the advertising interval range supported by the Controller, then the Controller shall return the Unsupported Feature or Parameter Value (0x11) error code.
@@ -193,7 +187,7 @@ class BeaconPi(object):
 
         address_bytelist = []
         addr = address_str.split(':')
-        addr.reverse()  # Needed for LittleEndian encoding. TODO should i try BigEndian and not reverse?
+        addr.reverse()  # Needed for LittleEndian encoding.
         for b in addr:
             address_bytelist.append(int(b, 16))
         return struct.pack("<BBBBBB", *address_bytelist)
@@ -201,17 +195,17 @@ class BeaconPi(object):
     @staticmethod
     def packed_bdaddr_to_string(address_byte):
         """Return a MAC address in str form, from a byte object"""
-        return ':'.join('%02x' % i for i in struct.unpack("<BBBBBB", bytes(address_byte[::-1])))  # TODO controlla
+        return ':'.join('%02x' % i for i in struct.unpack("<BBBBBB", bytes(address_byte[::-1])))
         # TODO maybe use: bluez.ba2str, str2ba ?
 
     def hci_le_parse_event(self, pkt):
         """Parse a BLE packet.
+
             Returns a dictionary which contains the event id, length and packet type,
             and others additional key/value pairs that represent the parsed content
             of the packet in binary and string form.
         """
 
-        # print("hci_le_parse_event called")
         result = {}
         # (HCI packetype, Event, parameterLenght)
         # HCI packettype codes (ptype):HCI Command = 0x01, syncronous Data = 0x02, Event = 0x04
@@ -291,7 +285,6 @@ class BeaconPi(object):
 
     def _handle_le_advertising_report(self, pkt):
         result = {}
-        # 
         num_reports = struct.unpack("<B", bytes([pkt[0]]))[0]
         report_pkt_offset = 0
         result["number_of_advertising_reports"] = num_reports
@@ -369,7 +362,7 @@ class BeaconPi(object):
         # check payload length (28byte)
         if (report["report_metadata_length"] != 28):
             return result
-        # check Company ID (LEL = 0x8888) $4,5:7 
+        # check Company ID (= 0x8888) $4,5:7 
         if (struct.unpack("<B", bytes([report["payload_binary"][1]]))[0] !=
                 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA):
             return result
@@ -388,10 +381,8 @@ class BeaconPi(object):
 
     def parse_events(self, restore_filter=False):
         """Method used to parse an event, save it just if matching our filter.
-        
-        
         """
-        # Save the current filter, for restoring later.
+
         if restore_filter:
             old_filter = self.hci_sock.getsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, 14)
         flt = bluez.hci_filter_new()
@@ -399,19 +390,12 @@ class BeaconPi(object):
         bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
         self.hci_sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
         filtered_reports = []
-        # print("Waiting for socket")
         pkt = self.hci_sock.recv(255)
-
-        debug = False
         # Analyze what is received and parse usefull data
         parsed_packet = self.hci_le_parse_event(pkt)
-        if "bluetooth_le_subevent_name" in parsed_packet and \
-                (parsed_packet["bluetooth_le_subevent_name"] == 'EVT_LE_ADVERTISING_REPORT'):
-            if debug:
-                for report in parsed_packet["advertising_reports"]:
-                    self.print_report(report, pkt)
-
+        if ("bluetooth_le_subevent_name" in parsed_packet) and (parsed_packet["bluetooth_le_subevent_name"] == 'EVT_LE_ADVERTISING_REPORT'):
             for report in parsed_packet["advertising_reports"]:
+                # self.print_report(report, pkt)
                 # If match our format we should save them
                 if self.verify_beacon_packet(report):
                     filtered_reports.append(report)
@@ -450,7 +434,7 @@ class BeaconPi(object):
         return packet
 
     def space_bt_address(self, bt_address):
-        return ''.join(bt_address.split(':'))
+        return ' '.join(bt_address.split(':'))
 
     def print_report(self, report, pkt):
         print("----------------------------------------------------")
@@ -465,6 +449,10 @@ class BeaconPi(object):
         print("")
 
     def le_set_advertising_data(self, adv_data):
+        """Call the LE SET ADVERTISING DATA hci istruction. 
+        
+        This should be called to set the data to send."""
+
         # Change filter/mode TODO
         # LE Set Advertising Data ->
         AD_TOT_LEN = 0x1f
@@ -498,13 +486,11 @@ class BeaconPi(object):
         cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
         cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
         cmd_pkt = adv_header_flags + cmd_pkt
-        print(cmd_pkt.hex())  # TODELETE
-        # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
-        # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
+        # print(cmd_pkt.hex())  # TODELETE
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
 
     def le_set_advertising_status(self, enable=True):
-        """Call LE SET ADVERTISING from hci_sock. 
+        """Call LE SET ADVERTISING ENABLE from hci_sock. 
         
         This should be called to enable the broadcast of SmartBeacon
         after setting the advertising with le_set_advertising_data()."""
@@ -514,8 +500,6 @@ class BeaconPi(object):
             enable_byte = 0x00
         # Create the structure needed for the parameters of the LE SET ADVERTISING hci command
         cmd_pkt = struct.pack("<B", enable_byte)  # LittleEndian(unsigned char, unsigned char)
-        # In BlueZ, hci_send_cmd is used to transmit a command to the microcontroller.
-        # A command consists of a Opcode Group Field that specifies the general category the command falls into, an Opcode Command Field that specifies the actual command, and a series of command parameters.
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_ENABLE, cmd_pkt)
         # Response? return status: 0x00 if command was successful!
 
