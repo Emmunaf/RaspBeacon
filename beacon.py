@@ -527,7 +527,8 @@ class BeaconPi(object):
         iv = cmd_pkt[-16:]
         cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)
         cmd_pkt = adv_header_flags + cmd_pkt
-        # print(cmd_pkt.hex())  # TODELETE
+        print("***** HelloBroad PACKEt *****")
+        print(cmd_pkt.hex())  # TODELETE
         if bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt) == 0x00:
             return iv  # Save IV on upper class if needed
             # Seems ok
@@ -566,7 +567,8 @@ class BeaconPi(object):
         cmd_pkt += struct.pack(">H", adv_data["obj_id"])
         cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
         cmd_pkt = adv_header_flags + cmd_pkt
-        # print(cmd_pkt.hex())  # TODELETE
+        print("***** Wifipassword PACKEt *****")
+        print(cmd_pkt.hex())  # TODELETE
         if bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt) == 0x00:
             return wifipassword
             #TOCHECK!!! #TODO
