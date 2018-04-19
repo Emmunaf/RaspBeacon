@@ -3,6 +3,7 @@ from beacon import BeaconPi
 import struct
 import string
 import os
+from threading import Timer
 
 class SmartCore(SmartObject):
 
@@ -33,7 +34,7 @@ class SmartCore(SmartObject):
         self.wifi_psk = psk.encode("utf-8")
         # TODO: CHANGE WIFI PASSWORD
 
-    def send_wifi_password(self, user_id):
+    def send_wifi_password(self, user_id, adv_time=0.6):
         adv_data = {
             "wifipassword":self.wifi_psk,
             "obj_id": self.object_id,
@@ -46,6 +47,9 @@ class SmartCore(SmartObject):
         print(adv_data)
         print(enc_params)
         self.beacon.le_set_wifi_password_broadcast(adv_data, enc_params)
+        # After the advertising time, need to rebroadcast the hello
+        t = Timer(adv_time, self.send_hellobroadcast)
+        t.start()
 
     def send_hellobroadcast(self):
         adv_data = {
@@ -70,11 +74,8 @@ class SmartCore(SmartObject):
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
-            print("recv_partial_iv:")
-            print(recv_partial_iv)
-            # Compare the partial IV (12/16 bytes)
+            # Compare the partial IV (12/16 bytes) 'cause the user_id (12:14) is different now
             if recv_partial_iv == self.iv[:12]:  # It's a real HelloB ACK,
-                print("ACK RECEIVED")
                 self.send_wifi_password(user_id)
                 self.new_password()
                 self.new_iv()
