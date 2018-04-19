@@ -61,10 +61,11 @@ class SmartCore(SmartObject):
               like the HelloBroadcast packet itself.
         """
         is_ack = False
-        clear_report = report["payload_encrypted_data"]
+        clear_report = report["payload_binary"]
         # Note: hello and hello_ack are in cleartext
-        cmd_id, = struct.unpack(">I", clear_report[0:4])
-        recv_iv = report["payload_binary"][4:]
+        #Skip BE AC identifier -> 2:6
+        cmd_id, = struct.unpack(">I", clear_report[2:6])
+        recv_iv = report["payload_binary"][6:22]
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         print(cmd_id)
