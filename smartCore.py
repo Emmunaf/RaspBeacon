@@ -62,6 +62,7 @@ class SmartCore(SmartObject):
         """
         is_ack = False
         clear_report = report["payload_binary"]
+        print(clear_report)
         # Note: hello and hello_ack are in cleartext
         #Skip BE AC identifier -> 2:6
         cmd_id, = struct.unpack(">I", clear_report[2:6])
