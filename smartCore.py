@@ -65,8 +65,8 @@ class SmartCore(SmartObject):
         print(clear_report)
         # Note: hello and hello_ack are in cleartext
         #Skip BE AC identifier -> 2:6
-        cmd_id, = struct.unpack(">I", clear_report[2:6])
-        recv_iv = report["payload_binary"][6:22]
+        cmd_id, = struct.unpack(">I", clear_report[6:10])
+        recv_iv = report["payload_binary"][10:26]
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         print(cmd_id)
