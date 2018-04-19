@@ -62,18 +62,18 @@ class SmartCore(SmartObject):
         """
         is_ack = False
         clear_report = report["payload_binary"]
-        print(clear_report)
+        #print(clear_report)
         # Note: hello and hello_ack are in cleartext
         #Skip BE AC identifier -> 2:6
         cmd_id, = struct.unpack(">I", clear_report[6:10])
         recv_iv = report["payload_binary"][10:26]
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
-        print(cmd_id)
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
             print("recv_iv:")
             print(recv_iv)
             if recv_iv == self.iv:  # It's a real HelloB ACK
+                print("ACK RECEIVED")
                 self.new_password()
                 self.new_iv()
                 self.send_wifi_password(user_id)
