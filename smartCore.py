@@ -14,7 +14,8 @@ class SmartCore(SmartObject):
         wifi_psk: the wifi password of the current hotspot
         wlan_device: the device used for the current wlan hotspot
         """
-        SmartObject.__init__(object_id, hci_device)
+
+        super().__init__(object_id, hci_device)
         # Generate a new iv and wifi_password
         self.iv = BeaconPi.generate_random_bytes(16)
         self.wifi_psk = BeaconPi.generate_random_bytes(16)
