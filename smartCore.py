@@ -43,9 +43,10 @@ class SmartCore(SmartObject):
             "aes_key": self.get_token(user_id),
             "aes_iv": self.get_iv(user_id)
         }
-        print("**** HelloBroadcastACK received ****")
+        print("**** HelloBroadcastACK received, sending WiFi pswd ****")
         print(adv_data)
         print(enc_params)
+        print(adv_data["wifipassword"].hex())
         self.beacon.le_set_wifi_password_broadcast(adv_data, enc_params)
         # After the advertising time, need to rebroadcast the hello
         t = Timer(adv_time, self.send_hellobroadcast)
@@ -56,6 +57,7 @@ class SmartCore(SmartObject):
             "partial_iv": self.partial_iv,
             "obj_id": self.object_id}
         self.iv = self.beacon.le_set_hello_broadcast(adv_data)
+        print("*** Sending HelloBroadcast: ****")
         print(self.iv)
 
     def check_for_hello_ack(self, report):
