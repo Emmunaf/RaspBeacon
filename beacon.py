@@ -558,7 +558,7 @@ class BeaconPi(object):
         cmd_pkt += struct.pack("<H", COMPANY_ID)
         cmd_pkt += struct.pack(">H", BEACON_TYPE_CODE)
         # Custom values begins here (after BEAC identifier)
-        cmd_data_payload = adv_data["wifipassword"].encode("utf-8")
+        cmd_data_payload = adv_data["wifipassword"]
         wifipassword = cmd_data_payload
         cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload, enc_params["aes_key"], enc_params["aes_iv"])
         cmd_pkt += cmd_data_payload_enc
