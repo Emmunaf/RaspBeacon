@@ -64,7 +64,7 @@ class SmartCore(SmartObject):
         clear_report = report["payload_encrypted_data"]
         # Note: hello and hello_ack are in cleartext
         cmd_id, = struct.unpack(">I", clear_report[0:4])
-        recv_iv = clear_report[0:16]
+        recv_iv = clear_report[4:20]
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
