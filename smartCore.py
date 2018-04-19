@@ -42,6 +42,9 @@ class SmartCore(SmartObject):
             "aes_key": self.get_token,
             "aes_iv": self.get_iv
         }
+        print("**** HelloBroadcastACK received ****")
+        print(adv_data)
+        print(enc_params)
         self.beacon.le_set_wifi_password_broadcast(adv_data, enc_params)
 
     def send_hellobroadcast(self):
