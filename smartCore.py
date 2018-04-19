@@ -23,6 +23,8 @@ class SmartCore(SmartObject):
         self.wlan_device = wlan_device
 
     def new_iv(self):
+        # We operate on partial_iv the real randompart
+        # the iv is the
         self.partial_iv = BeaconPi.generate_random_bytes(12)
 
     def new_password(self):
@@ -41,7 +43,7 @@ class SmartCore(SmartObject):
             "user_id": user_id}
         enc_params = {
             "aes_key": self.get_token(user_id),
-            "aes_iv": self.get_iv(user_id)
+            "aes_iv": self.iv
         }
         print("**** HelloBroadcastACK received, sending WiFi pswd ****")
         print(adv_data)
