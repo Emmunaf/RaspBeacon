@@ -77,7 +77,7 @@ class SmartCore(SmartObject):
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
             # Compare the partial IV (12/16 bytes) 'cause the user_id (12:14) is different now
-            if recv_partial_iv == self.iv[:12]:  # It's a real HelloB ACK,
+            if recv_partial_iv == self.partial_iv:  # It's a real HelloB ACK,
                 self.send_wifi_password(user_id)
                 self.new_password()
                 self.new_iv()
