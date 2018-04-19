@@ -30,7 +30,7 @@ class SmartCore(SmartObject):
         psk = ""
         for x in range(length):
             psk += chars[ord(BeaconPi.generate_random_bytes(1)) % len(chars)]
-        self.wifi_psk = psk.encode("ascii")
+        self.wifi_psk = psk.encode("utf-8")
         # TODO: CHANGE WIFI PASSWORD
 
     def send_wifi_password(self, user_id):
@@ -39,8 +39,8 @@ class SmartCore(SmartObject):
             "obj_id": self.object_id,
             "user_id": user_id}
         enc_params = {
-            "aes_key": self.get_token,
-            "aes_iv": self.get_iv
+            "aes_key": self.get_token(user_id),
+            "aes_iv": self.get_iv(user_id)
         }
         print("**** HelloBroadcastACK received ****")
         print(adv_data)
