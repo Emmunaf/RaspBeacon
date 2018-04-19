@@ -67,7 +67,10 @@ class SmartCore(SmartObject):
         recv_iv = clear_report[4:20]
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
+        print(cmd_id)
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
+            print("recv_iv:")
+            print(recv_iv)
             if recv_iv == self.iv:  # It's a real HelloB ACK
                 self.new_password()
                 self.new_iv()
