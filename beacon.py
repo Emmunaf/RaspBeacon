@@ -537,7 +537,7 @@ class BeaconPi(object):
         
         @params:
         adv_data = {
-                    "wifipassword":[16B],
+                    "wifipassword":[16B] (ascii encoded),
                     "obj_id": [2B obj_id]
                     "user_id": [2B user_id ONLY FOR ACK]}
         enc_params = {
@@ -558,12 +558,7 @@ class BeaconPi(object):
         cmd_pkt += struct.pack("<H", COMPANY_ID)
         cmd_pkt += struct.pack(">H", BEACON_TYPE_CODE)
         # Custom values begins here (after BEAC identifier)
-        if adv_data.get("ack", False):  # If is an ack to helloBro. first 4Byte are all ones
-            cmd_id = 0xFFFFFFFF
-        else:
-            cmd_id = 0x00
-        cmd_pkt += struct.pack(">I", cmd_id)
-        cmd_data_payload = struct.pack(">QQ", adv_data["wifipassword"][:8], adv_data["wifipassword"][8:16])
+        cmd_data_payload = adv_data["wifipassword"].encode("utf-8")
         wifipassword = cmd_data_payload
         cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload, enc_params["aes_key"], enc_params["aes_iv"])
         cmd_pkt += cmd_data_payload_enc
