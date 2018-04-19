@@ -112,6 +112,8 @@ class SmartCore(SmartObject):
 
     def parse_smartbeacon(self, report):
         # Unpack all field and return True if packet is valid, and update report dict
+        if self.check_for_hello_ack(report):
+                return True
         if len(report["payload_encrypted_data"]) == 16:
             report["decrypted_payload"] = self.decrypt_payload(report["payload_encrypted_data"], report['major'])
             dec_payload = report["decrypted_payload"]
@@ -122,8 +124,6 @@ class SmartCore(SmartObject):
                                      'cmd_bitmask': cmd_bitmask,
                                      'cmd_opcode': cmd_opcode, 'cmd_params': cmd_params, 'res1': res1, 'res2': res2,
                                      'is_ack': False, 'user_id': report['major']}
-            if self.check_for_hello_ack(report):
-                return True
             if not self.verify_ack(report['smartbeacon']):  # is an ack?
                 user_id = report['smartbeacon']['user_id']
                 counter_received = report['smartbeacon']['counter']
