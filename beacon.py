@@ -547,6 +547,7 @@ class BeaconPi(object):
         }
         This should be called to spam hello_message used for WiFi auth"""
 
+        print("TEEES")
         # Change filter/mode TODO
         # LE Set Advertising Data ->
         AD_TOT_LEN = 0x1f
