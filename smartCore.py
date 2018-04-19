@@ -1,4 +1,4 @@
-from smartObject import SmartObject
+from smartObject import SmartObject, SmartCommands
 from beacon import BeaconPi
 import struct
 import string
@@ -17,12 +17,12 @@ class SmartCore(SmartObject):
 
         super().__init__(object_id, hci_device)
         # Generate a new iv and wifi_password
-        self.iv = BeaconPi.generate_random_bytes(16)
+        self.partial_iv = BeaconPi.generate_random_bytes(12)
         self.wifi_psk = BeaconPi.generate_random_bytes(16)
         self.wlan_device = wlan_device
 
     def new_iv(self):
-        self.iv = BeaconPi.generate_random_bytes(16)
+        self.partial_iv = BeaconPi.generate_random_bytes(12)
 
     def new_password(self):
         length = 16
@@ -43,6 +43,13 @@ class SmartCore(SmartObject):
             "aes_iv": self.get_iv
         }
         self.beacon.le_set_wifi_password_broadcast(adv_data, enc_params)
+
+    def send_hellobroadcast(self):
+        adv_data = {
+            "partial_iv": self.partial_iv,
+            "obj_id": self.object_id}
+        self.iv = self.beacon.le_set_hello_broadcast(adv_data)
+        print(self.iv)
 
     def check_for_hello_ack(self, report):
         """Check and do some action if an HelloBroadcast is received
@@ -65,6 +72,37 @@ class SmartCore(SmartObject):
                 is_ack = True
         return is_ack
 
+
+    def start_listen(self):
+        beacon = BeaconPi(self.hci_device)  # HCIDEVICE
+        self.beacon = beacon
+        sock = beacon.open_socket()
+        beacon.hci_le_set_scan_parameters()
+        beacon.start_le_scan()
+        beacon.hci_set_advertising_parameters()
+        beacon.le_set_advertising_status(enable=True)  # Start adv.
+        self.send_hellobroadcast()
+        print("Waiting for smartbeacon(SC Edition)")
+        smart_command_handler = SmartCommands("command_list.json")
+        sending_ack = False
+        while True:
+            smartbeacon_list = beacon.parse_events()
+            self.remove_duplicates_list(smartbeacon_list)
+            for smartbeacon in smartbeacon_list:
+                if smartbeacon['minor'] == self.object_id:  # minor is id_obj
+                    clear_user_id = smartbeacon['major']  # clear, not inside encr. payload
+                    # print(smartbeacon)
+                    if self.parse_smartbeacon(smartbeacon):
+                        if not smartbeacon['smartbeacon']['is_ack']:
+                            # Get encryption data of the user
+                            aes_key = self.get_token(clear_user_id)
+                            aes_iv = self.get_iv(clear_user_id)
+                            beacon.send_ack(clear_user_id, self.get_counter(clear_user_id), aes_key, aes_iv)
+                            print("Sent ack to" + str(clear_user_id))
+                            # print(smartbeacon)
+                            sending_ack = True
+                            # Execute action
+                            smart_command_handler.parse_command(smartbeacon['smartbeacon'])
 
     def parse_smartbeacon(self, report):
         # Unpack all field and return True if packet is valid, and update report dict
