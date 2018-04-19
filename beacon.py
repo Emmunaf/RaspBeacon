@@ -521,7 +521,7 @@ class BeaconPi(object):
         else:
             cmd_id = 0x00
         cmd_pkt += struct.pack(">I", cmd_id)
-        cmd_pkt += struct.pack(">QI", adv_data["partial_iv"][:8], adv_data["partial_iv"][8:])
+        cmd_pkt += adv_data["partial_iv"]
         cmd_pkt += struct.pack(">H", adv_data.get("user_id", 0xFFFF))  # Note: if is an ack, this 2 bytes are user_id, otherwise 0xFFFF (all user)
         cmd_pkt += struct.pack(">H", adv_data["obj_id"])
         iv = cmd_pkt[-16:]
