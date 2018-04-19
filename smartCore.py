@@ -64,19 +64,20 @@ class SmartCore(SmartObject):
         clear_report = report["payload_binary"]
         #print(clear_report)
         # Note: hello and hello_ack are in cleartext
-        #Skip BE AC identifier -> 2:6
+        #Skip manufacturerID and BEAC identifier -> 0:6
         cmd_id, = struct.unpack(">I", clear_report[6:10])
-        recv_iv = report["payload_binary"][10:26]
+        recv_partial_iv = report["payload_binary"][10:22]
         user_id = report['major']
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
-            print("recv_iv:")
-            print(recv_iv)
-            if recv_iv == self.iv:  # It's a real HelloB ACK
+            print("recv_partial_iv:")
+            print(recv_partial_iv)
+            # Compare the partial IV (12/16 bytes)
+            if recv_partial_iv == self.iv[:12]:  # It's a real HelloB ACK,
                 print("ACK RECEIVED")
+                self.send_wifi_password(user_id)
                 self.new_password()
                 self.new_iv()
-                self.send_wifi_password(user_id)
                 is_ack = True
         return is_ack
 
