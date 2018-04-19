@@ -530,7 +530,7 @@ class BeaconPi(object):
         # print(cmd_pkt.hex())  # TODELETE
         if bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt) == 0x00:
             return iv  # Save IV on upper class if needed
-            #TOCHECK!!! #TODO
+            # Seems ok
 
     def le_set_wifi_password_broadcast(self, adv_data, enc_params):
         """Call the LE SET ADVERTISING DATA hci istruction. 
