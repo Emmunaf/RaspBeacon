@@ -16,7 +16,7 @@ SmartBeacon can be seen as an upper layer on an AltBeacon-like standard (this wa
 BlueZ usage resource:
 https://people.csail.mit.edu/albert/bluez-intro/x682.html
 SmartBeacon wire-format:
-    02      # Number of bytes that follow in *first* AD structure (Used for flag specification)
+    02      # Number of bytes that follow in *first* AD structure (used for flag specification)
     01      # Flags AD type # Flags of Advertisment event types (see the following list)
                 # connectable: a scanner can start a connection after be notified by this event
                 # scannable: a scanner can start a scan request after receving one of these
@@ -76,15 +76,16 @@ EVT_LE_CONN_UPDATE_COMPLETE = 0x03
 EVT_LE_READ_REMOTE_USED_FEATURES_COMPLETE = 0x04
 
 # Advertisment event types
-ADV_IND = 0x00  # connectable undirected advertising event
-ADV_DIRECT_IND = 0x01  # connectable directed advertising event
+ADV_IND = 0x00          # connectable undirected advertising event
+ADV_DIRECT_IND = 0x01   # connectable directed advertising event
 ADV_SCAN_IND = 0x02
 ADV_NONCONN_IND = 0x03  # non-connectable undirected advertising event
 
-SCAN_REQ = 0x03  # scan request
-ADV_SCAN_RSP = 0x04  # scan response
-CONNECT_REQ = 0x05  # connection request
-ADV_DISCOVER_IND = 0x06  # scannable undirected advertising
+SCAN_REQ = 0x03         # scan request
+ADV_SCAN_RSP = 0x04     # scan response
+CONNECT_REQ = 0x05      # connection request
+ADV_DISCOVER_IND = 0x06 # scannable undirected advertising
+
 BEACON_TYPE_CODE = 0xBEAC  # Alt Beacon identifier
 
 ADV_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF
@@ -101,6 +102,10 @@ class BeaconPi(object):
     def open_socket(self):
         self.hci_sock = bluez.hci_open_dev(self.device_id)
         return self.hci_sock
+
+    @staticmethod
+    def generate_random_bytes(len):
+        return os.urandom(len)
 
     @staticmethod
     def printpacket(pkt):
@@ -170,8 +175,8 @@ class BeaconPi(object):
         channels_map = 0x07
         filter_policy = 0x00
         cmd_pkt = struct.pack("<HHBBB", advertising_interval_min, advertising_interval_max, advertising_type, own_address_type, peer_address_type)
-        cmd_pkt += struct.pack("<6B", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)  # Peer_addr =00000
-        cmd_pkt += struct.pack("<BB", channels_map, filter_policy)  # All channels
+        cmd_pkt += struct.pack("<6B", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)   # Peer_addr =00000
+        cmd_pkt += struct.pack("<BB", channels_map, filter_policy)          # All channels
         res = bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
         return res
         # Response?return status: 0x00LE_Set_Scan_Parameters command succeeded.
@@ -372,7 +377,7 @@ class BeaconPi(object):
         if (self.get_beacon_type(report["payload_binary"][4:6]) != BEACON_TYPE_CODE):
             return result
 
-        if len(report["payload_encrypted_data"]) != 16:  # AES blocksize
+        if len(report["payload_encrypted_data"]) != 16:  # AES blocksize, fake_check TODO
             return result
         # 6:28 DataPayload
 
@@ -404,21 +409,21 @@ class BeaconPi(object):
         return filtered_reports
 
     # No needed TODO
-    def decrypt_payload(self, pkt):
-        AESkey = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
-        AESiv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
-        aesc = AESCipher(AESkey)
-        aesc.set_iv(AESiv)
+    def decrypt_payload(self, pkt, aes_key, aes_iv):
+        #aes_key = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
+        #aes_iv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
+        aesc = AESCipher(aes_key)
+        aesc.set_iv(aes_iv)
         decrypted_bytes = aesc.decrypt(pkt)
         # decrypted_bytes.hex()
         return decrypted_bytes
 
     # No needed TODO
-    def encrypt_payload(self, pkt):
-        AESkey = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
-        AESiv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
-        aesc = AESCipher(AESkey)
-        aesc.set_iv(AESiv)
+    def encrypt_payload(self, pkt, aes_key, aes_iv):
+        #aes_key = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'
+        #aes_iv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'
+        aesc = AESCipher(aes_key)
+        aesc.set_iv(aes_iv)
         encrypted_bytes = aesc.encrypt(pkt)
         return encrypted_bytes
 
@@ -448,16 +453,16 @@ class BeaconPi(object):
             print("\t%s: %s" % (k, v))
         print("")
 
-    def le_set_advertising_data(self, adv_data):
+    def le_set_advertising_data(self, adv_data, enc_params):
         """Call the LE SET ADVERTISING DATA hci istruction. 
         
-        This should be called to set the data to send."""
+        This should be called to set the data to advertise."""
 
         # Change filter/mode TODO
         # LE Set Advertising Data ->
         AD_TOT_LEN = 0x1f
-        AD_LENGHT_FLAG = 0x02  # Number of AD flag structure
-        AD_TYPE_FLAG = 0x01  # Type of AD structure, 0x01 tells that an AD Flags structure will follow
+        AD_LENGHT_FLAG = 0x02
+        AD_TYPE_FLAG = 0x01
         # list of ADTYPE: https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
         AD_DATA_FLAG = 12  # Flags data LE General Discoverable
         ''' # Flags value 12 = 0xc = 000 000110  (#bit: 765 43210)
@@ -479,21 +484,104 @@ class BeaconPi(object):
         cmd_data_payload += adv_data.get("bitmap", struct.pack("B", (0xFF)))
         cmd_data_payload += struct.pack(">B", adv_data.get("RES1", 0x00))
         cmd_data_payload += struct.pack(">B", adv_data.get("RES2", 0x00))
-        cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload)
+        cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload, enc_params["aes_key"], enc_params["aes_iv"])
         # Add the encrypted payload
         cmd_pkt += cmd_data_payload_enc
         cmd_pkt += struct.pack(">H", adv_data["user_id"])
-        cmd_pkt += struct.pack(">BB", adv_data["obj_category"], adv_data["obj_id"])
+        cmd_pkt += struct.pack(">H", adv_data["obj_id"])
         cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
         cmd_pkt = adv_header_flags + cmd_pkt
         # print(cmd_pkt.hex())  # TODELETE
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
 
+    def le_set_hello_broadcast(self, adv_data):
+        """Call the LE SET ADVERTISING DATA hci istruction. 
+        
+        @params:
+        adv_data = {"ack":[True|False],
+                    "partial_iv":[12B RandomIV],
+                    "obj_id": [2B obj_id]
+                    "user_id": [2B user_id ONLY FOR ACK]}
+        This should be called to spam hello_message used for WiFi auth"""
+
+        # Change filter/mode TODO
+        # LE Set Advertising Data ->
+        AD_TOT_LEN = 0x1f
+        AD_LENGHT_FLAG = 0x02
+        AD_TYPE_FLAG = 0x01
+        AD_DATA_FLAG = 12
+        adv_header_flags = struct.pack(">BBBB", AD_TOT_LEN, AD_LENGHT_FLAG, AD_TYPE_FLAG, AD_DATA_FLAG)
+        AD_DATA_LEN = 27
+        cmd_pkt = struct.pack(">BB", AD_DATA_LEN, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
+        cmd_pkt += struct.pack("<H", COMPANY_ID)
+        cmd_pkt += struct.pack(">H", BEACON_TYPE_CODE)
+        # Custom values begins here (after BEAC identifier)
+        if adv_data.get("ack", False):  # If is an ack to helloBro. first 4Byte are all ones
+            cmd_id = 0xFFFFFFFF
+        else:
+            cmd_id = 0x00
+        cmd_pkt += struct.pack(">I", cmd_id)
+        cmd_pkt += struct.pack(">QI", adv_data["partial_iv"][:8], adv_data["partial_iv"][8:])
+        cmd_pkt += struct.pack(">H", adv_data.get("user_id", 0xFFFF))  # Note: if is an ack, this 2 bytes are user_id, otherwise 0xFFFF (all user)
+        cmd_pkt += struct.pack(">H", adv_data["obj_id"])
+        iv = cmd_pkt[-16:]
+        cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)
+        cmd_pkt = adv_header_flags + cmd_pkt
+        # print(cmd_pkt.hex())  # TODELETE
+        if bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt) == 0x00:
+            return iv  # Save IV on upper class if needed
+            #TOCHECK!!! #TODO
+
+    def le_set_wifi_password_broadcast(self, adv_data, enc_params):
+        """Call the LE SET ADVERTISING DATA hci istruction. 
+        
+        @params:
+        adv_data = {
+                    "wifipassword":[16B],
+                    "obj_id": [2B obj_id]
+                    "user_id": [2B user_id ONLY FOR ACK]}
+        enc_params = {
+            "aes_key": [16B]
+            "aes_iv": [16B]
+        }
+        This should be called to spam hello_message used for WiFi auth"""
+
+        # Change filter/mode TODO
+        # LE Set Advertising Data ->
+        AD_TOT_LEN = 0x1f
+        AD_LENGHT_FLAG = 0x02
+        AD_TYPE_FLAG = 0x01
+        AD_DATA_FLAG = 12
+        adv_header_flags = struct.pack(">BBBB", AD_TOT_LEN, AD_LENGHT_FLAG, AD_TYPE_FLAG, AD_DATA_FLAG)
+        AD_DATA_LEN = 27
+        cmd_pkt = struct.pack(">BB", AD_DATA_LEN, ADV_TYPE_MANUFACTURER_SPECIFIC_DATA)
+        cmd_pkt += struct.pack("<H", COMPANY_ID)
+        cmd_pkt += struct.pack(">H", BEACON_TYPE_CODE)
+        # Custom values begins here (after BEAC identifier)
+        if adv_data.get("ack", False):  # If is an ack to helloBro. first 4Byte are all ones
+            cmd_id = 0xFFFFFFFF
+        else:
+            cmd_id = 0x00
+        cmd_pkt += struct.pack(">I", cmd_id)
+        cmd_data_payload = struct.pack(">QQ", adv_data["wifipassword"][:8], adv_data["wifipassword"][8:16])
+        wifipassword = cmd_data_payload
+        cmd_data_payload_enc = self.encrypt_payload(cmd_data_payload, enc_params["aes_key"], enc_params["aes_iv"])
+        cmd_pkt += cmd_data_payload_enc
+        cmd_pkt += struct.pack(">H", adv_data.get("user_id"))  # Note: if is an ack, this 2 bytes are user_id, otherwise 0xFFFF (all user)
+        cmd_pkt += struct.pack(">H", adv_data["obj_id"])
+        cmd_pkt += struct.pack(">bB", ADV_RSSI_VALUE, 0x00)  # Last byte is manufacturer reserved
+        cmd_pkt = adv_header_flags + cmd_pkt
+        # print(cmd_pkt.hex())  # TODELETE
+        if bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt) == 0x00:
+            return wifipassword
+            #TOCHECK!!! #TODO
+
     def le_set_advertising_status(self, enable=True):
-        """Call LE SET ADVERTISING ENABLE from hci_sock. 
+        """Call LE SET ADVERTISING ENABLE from hci_sock.
         
         This should be called to enable the broadcast of SmartBeacon
-        after setting the advertising with le_set_advertising_data()."""
+        after setting the advertising with le_set_advertising_data()"""
+
         if enable:
             enable_byte = 0x01
         else:
@@ -503,11 +591,13 @@ class BeaconPi(object):
         return bluez.hci_send_cmd(self.hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_ENABLE, cmd_pkt)
         # Response? return status: 0x00 if command was successful!
 
-    def send_ack(self, user_id, counter):
+    def send_ack(self, user_id, counter, aes_key, aes_iv):
         adv_data = {"counter": counter, "cmd_type": 0xFF, "cmd_class": 0xFF, "cmd_opcode": 0xFF, "cmd_params": user_id,
-                    "user_id": user_id, "obj_category": 0x00, "obj_id": 0x00}
+                    "user_id": user_id, "obj_id": 0x00}
+        #TODO add the obj_id parameter
         # Need to disable scan?
-        self.le_set_advertising_data(adv_data)
+        enc_params = {"aes_key": aes_key, "aes_iv": aes_iv}
+        self.le_set_advertising_data(adv_data, enc_params)
         # Need to reenable scan?
         # Need to REMOVE ADVERTISING DATA after some time
 

@@ -7,7 +7,7 @@ from beacon import BeaconPi
 from AESCipher import AESCipher
 import smartbeacon_command
 
-#atexit.register
+#atexit.register, ctrlBeacon
 class SmartObject(object):
     """A class used for handling SmartObjects"""
 
@@ -116,6 +116,7 @@ class SmartObject(object):
 
     def start_listen(self):
         beacon = BeaconPi(self.hci_device)  # HCIDEVICE
+        self.beacon = beacon
         sock = beacon.open_socket()
         beacon.hci_le_set_scan_parameters()
         beacon.start_le_scan()
@@ -133,7 +134,10 @@ class SmartObject(object):
                     # print(smartbeacon)
                     if self.parse_smartbeacon(smartbeacon):
                         if not smartbeacon['smartbeacon']['is_ack']:
-                            beacon.send_ack(clear_user_id, self.get_counter(clear_user_id))
+                            # Get encryption data of the user
+                            aes_key = self.get_token(clear_user_id)
+                            aes_iv = self.get_iv(clear_user_id)
+                            beacon.send_ack(clear_user_id, self.get_counter(clear_user_id), aes_key, aes_iv)
                             print("Sent ack to" + str(clear_user_id))
                             # print(smartbeacon)
                             sending_ack = True
