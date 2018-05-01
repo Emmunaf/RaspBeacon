@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import struct
 import json
+import os
 
 
 from beacon import BeaconPi
@@ -12,6 +13,9 @@ class SmartObject(object):
     """A class used for handling SmartObjects"""
 
     def __init__(self, object_id=-1, hci_device=0):
+        if os.getuid() != 0:
+            raise NotSudo("The software need to be run with sudo or elevated privileges.\nRetry.")
+
         if object_id == -1:  # Check configurationFile TODO
             object_id = self.register_object
         self.object_id = object_id
@@ -50,6 +54,7 @@ class SmartObject(object):
 
     def parse_token(self, user_id):
         """A method that asks to SmartCore (DB) a specified token from a user_id"""
+
         if user_id not in self.last_users:
             self.last_users[user_id] = {}
         token = b'\x9b\xd9\xcd\xf6\xbe+\x9dX\xfb\xd2\xef>\xd87i\xa0\xca\xf5o\xd0\xac\xc3\xe0R\xf0z\xfa\xb8\xdd\x01?E'  # TODO
@@ -58,6 +63,7 @@ class SmartObject(object):
 
     def parse_counter(self, user_id):
         """A method that asks to SmartCore (DB) a specified counter from a user_id"""
+
         if user_id not in self.last_users:  # Add to last users list if new
             self.last_users[user_id] = {}
         if 'counter' not in self.last_users[user_id]:  # Add counter key if not exist
@@ -70,6 +76,7 @@ class SmartObject(object):
         """A method that asks to SmartCore (DB) the iv for a known user_id
         :rtype: bytearray
         """
+
         if user_id not in self.last_users:
             self.last_users[user_id] = {}
         iv = b'\xef\xaa)\x9fHQ\x0f\x04\x18\x1e\xb5;B\xff\x1c\x01'  # TODO
@@ -85,6 +92,7 @@ class SmartObject(object):
             self.last_users[user_id].update(user_dict)
         else:
             self.last_users[user_id] = user_dict
+        #TODO: call REST to update value
 
     def set_iv_from_uid(self, user_id, iv):
         """Method for setting iv with a known user_id """
@@ -94,6 +102,7 @@ class SmartObject(object):
             self.last_users[user_id].update(user_dict)
         else:
             self.last_users[user_id] = user_dict
+        #TODO: call REST to update value
 
     def _set_counter_from_uid(self, user_id, counter):
         """Method for setting counter with a known user_id """
@@ -104,9 +113,11 @@ class SmartObject(object):
         else:
             self.last_users[user_id] = user_dict
             # In every case send update to DB
-
+        #TODO: call REST to update value
+        
     def increase_counter(self, user_id):
         """Increase counter by 1, handle 8byte counter"""
+
         old_counter = self.get_counter(user_id)
         if old_counter == 0xFFFFFFFFFFFFFFFF:
             new_counter = 0x00
@@ -242,12 +253,14 @@ class SmartCommands(object):
     
     def check_command_type(self, command_type):
         """Return True if a command type is available"""
+
         if not isinstance(command_type, str):
             command_type = self.int_to_hex_with0(command_type)
         return command_type in self.commands
     
     def check_command_class(self, command_type, command_class):
         """Return True if a command class is available"""
+
         if not isinstance(command_class, str):
             command_class = self.int_to_hex_with0(command_class)
         if not isinstance(command_type, str):
@@ -278,3 +291,6 @@ class SmartCommands(object):
         
         Example: 1 -> 0x01"""
         return "0x%0.2X" % int_16
+
+class NotSudo(Exception):
+    pass

@@ -10,7 +10,7 @@ BeaconPi is a python project.
 
 You should also have the following requirements:
   - Raspberry
-  - ..
+  - A supported wlan adapter (nl80211 driver) or the built-in adapter of Raspberry 0W and 3+
 
 ### Installation
 
