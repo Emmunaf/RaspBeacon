@@ -11,7 +11,7 @@ class HostapdException(Exception):
 # Note: time.time() depends on clock settings, not exact
 class HostapdHandler():
     def __init__(self, wlan_device="wlan0", init_ssid="SmartAP", hostapd_conf_path = "/etc/hostapd/hostapd.conf"):
-        self.last_restart_time = time.time()-1000  # TODO: - max_of_min_interval
+        self.last_restart_time = time.time()-3  # TODO: - max_of_min_interval
         self.wlan_device = wlan_device
         self.hostapd_conf_path = hostapd_conf_path
         self.change_wifi_ssid(init_ssid)
