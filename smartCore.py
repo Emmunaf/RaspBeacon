@@ -96,8 +96,8 @@ class SmartCore(SmartObject):
             "partial_iv": self.partial_iv,
             "obj_id": self.object_id}
         self.iv = self.beacon.le_set_hello_broadcast(adv_data)
-        #print("*** Sending HelloBroadcast: ****")
-        #print(self.iv)
+        print("*** Sending HelloBroadcast: ****")
+        print(self.iv)
 
     def check_for_hello_ack(self, report):
         """Check and do some action if an HelloBroadcast is received
