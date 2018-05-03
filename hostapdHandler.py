@@ -27,6 +27,7 @@ class HostapdHandler():
         min_interval = 2.8  # By default a value of 3 secs should be ok
         current_time = time.time()
         remaining_time = current_time - self.last_restart_time + min_interval
+        print("Sleeping for:"+str(remaining_time))
         return remaining_time
         
 
@@ -52,6 +53,13 @@ class HostapdHandler():
             raise HostapdException("Check your hostapd installation and configuration.\n\
             Run: 'service hostapd status' for details")
 
+
+    def hostapd_restart_cmd(self):
+        """Execute hostapd service restart cmd"""
+        rstatus = subprocess.call("service hostapd restart", shell=True)
+        self.last_restart_time = time.time()
+        return rstatus == 0
+
     def restart_hostapd(self):
         """Always call this after updating the hostapd config file.
         
@@ -66,9 +74,10 @@ class HostapdHandler():
         if wait_time > 0:  
             # Wait if the time between now and the last restart is < min_interval
             time.sleep(self.restart_min_interval())
-        rstatus = subprocess.call("service hostapd restart", shell=True)
-        self.last_restart_time = time.time()
-        return rstatus == 0
+            t = threading.Timer(wait_time, self.hostapd_restart_cmd)
+            t.start()
+        return True
+        
         
 
     def change_wifi_visibility(self, stealth = True, restart=True):
