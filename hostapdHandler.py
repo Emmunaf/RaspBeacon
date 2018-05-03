@@ -23,12 +23,14 @@ class HostapdHandler():
         hostapd service cant be restarted too often.
         The default service limit is to allow 5 restarts in a 10sec period.
         For more info: man systemd.unit and man systemd.service
+        Note: check remaining_time > 0, if < 0 the minimun_wait_time
+            was already gone
         """
         #NOTE: be carefull in future multithreading support
-        min_interval = 2.8  # By default a value of 3 secs should be ok
+        min_interval = 3  # By default a value of 3 secs should be ok
         current_time = time.time()
-        remaining_time = self.last_restart_time - current_time + min_interval
-        print("Restarting in:"+str(remaining_time))
+        remaining_time = current_time - (self.last_restart_time + min_interval)
+        print("Restarting time:"+str(remaining_time))
         return remaining_time
         
 
