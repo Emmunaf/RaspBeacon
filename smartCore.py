@@ -10,6 +10,7 @@ class SmartCore(SmartObject):
     """Class used for SmartCore object (extend SmartObject)
 
         Internal attributes:
+        hostapd - istance of HostapdHandler used to edit the Wifi AP config
         hci_device - number of the hci to use (ex. 0 or 1)[INT]
         iv - the iv ready to use for the next communication        
         wifi_psk - the wifi password of the current AP (bytes, utf-8 encoded)
@@ -113,7 +114,9 @@ class SmartCore(SmartObject):
         HELLO_BROADCAST_ACK_CMD_ID = 0xFFFFFFFF
         if cmd_id == HELLO_BROADCAST_ACK_CMD_ID:
             # Compare the partial IV (12/16 bytes) 'cause the user_id (12:14) is different now
+            print("IS this a valid HelloBroadcast Ack?")
             if recv_partial_iv == self.partial_iv:  # It's a real HelloB ACK,
+                print("This is a valid HB ACK!")
                 self.send_wifi_password(user_id)
                 self.new_password()
                 self.new_partial_iv()
