@@ -15,8 +15,9 @@ class HostapdHandler():
         self.wlan_device = wlan_device
         self.hostapd_conf_path = hostapd_conf_path
         self.change_wifi_ssid(init_ssid)
+        self.waiting_restart = False  # Used to avoid more timers
 
-    def restart_min_interval(self):
+    def get_restart_min_interval(self):
         """Return the minimum time (sec) to wait for the next restart.
         
         hostapd service cant be restarted too often.
@@ -26,8 +27,8 @@ class HostapdHandler():
         #NOTE: be carefull in future multithreading support
         min_interval = 2.8  # By default a value of 3 secs should be ok
         current_time = time.time()
-        remaining_time = current_time - self.last_restart_time + min_interval
-        print("Sleeping for:"+str(remaining_time))
+        remaining_time = self.last_restart_time - current_time + min_interval
+        print("Restarting in:"+str(remaining_time))
         return remaining_time
         
 
@@ -58,6 +59,7 @@ class HostapdHandler():
         """Execute hostapd service restart cmd"""
         rstatus = subprocess.call("service hostapd restart", shell=True)
         self.last_restart_time = time.time()
+        self.waiting_restart = False
         return rstatus == 0
 
     def restart_hostapd(self):
@@ -70,10 +72,11 @@ class HostapdHandler():
         except HostapdException as e:
             print(e)
         # 
-        wait_time = self.restart_min_interval()
-        if wait_time > 0:  
+        wait_time = self.get_restart_min_interval()
+        if wait_time > 0 and not self.waiting_restart:  
+            #TODO: avoid double call, use self.timer
             # Wait if the time between now and the last restart is < min_interval
-            time.sleep(self.restart_min_interval())
+            self.waiting_restart = True
             t = threading.Timer(wait_time, self.hostapd_restart_cmd)
             t.start()
         return True
