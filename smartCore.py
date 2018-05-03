@@ -7,23 +7,31 @@ import os
 from threading import Timer
 
 class SmartCore(SmartObject):
+    """Class used for SmartCore object (extend SmartObject)
 
+        Internal attributes:
+        hci_device - number of the hci to use (ex. 0 or 1)[INT]
+        iv - the iv ready to use for the next communication        
+        wifi_psk - the wifi password of the current AP (bytes, utf-8 encoded)
+        wlan_device - the device used for the current wlan AP (ex. wlan0, mon0)
+    """
+    
     def __init__(self, object_id=-1, hci_device=0, wlan_device="wlan0"):
-        """An extended SmartObject
+        """An extended SmartObject class used to handle a SmartCore 
         
-        The status is defined also by:
-        hci_device: number of the hci to use (ex. 0 or 1)[INT]
-        iv: the iv ready to use for the next communication        
-        wifi_psk: the wifi password of the current hotspot (bytes format)
-        wlan_device: the device used for the current wlan hotspot (ex. wlan0, mon0)
+        Keywords argument:
+        hci_device - number of the hci to use (ex. 0 or 1)[INT]
+        iv - the iv that will be used for the next communication        
+        wifi_psk - the wifi password of the current AP (bytes, utf-8 encoded)
+        wlan_device - the device used for the current wlan AP (ex. wlan0, mon0)
         """
 
         super().__init__(object_id, hci_device)
         # Generate a new iv and wifi_password
+        self.hostapd = HostapdHandler(wlan_device)
         self.wlan_device = wlan_device
         self.new_partial_iv()
         self.new_password()
-        self.hostapd = HostapdHandler(wlan_device)
         #self.change_wifi_visibility(stealth=True)  # Hidden AP
 
     def new_partial_iv(self):
@@ -33,7 +41,7 @@ class SmartCore(SmartObject):
 
     @staticmethod
     def generate_new_psk_str(length = 16):
-        """Generate a new password composed by 16 characters by default"""
+        """Generate a new password and return it as string"""
         chars = string.ascii_letters + string.digits + '!@#$%^&*()'
         psk = ""
         for x in range(length):
