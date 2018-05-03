@@ -43,7 +43,7 @@ class SmartCore(SmartObject):
     @staticmethod
     def generate_new_psk_str(length = 16):
         """Generate a new password and return it as string"""
-        chars = string.ascii_letters + string.digits + '!@#$%^&*()'
+        chars = string.ascii_letters + string.digits  # TODO:escape symbol when write config + '!@#$%^&*()'
         psk = ""
         for x in range(length):
             psk += chars[ord(BeaconPi.generate_random_bytes(1)) % len(chars)]
