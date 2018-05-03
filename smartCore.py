@@ -66,7 +66,7 @@ class SmartCore(SmartObject):
         #self.wlan_device
         pass
 
-    def send_wifi_password(self, user_id, adv_time=0.6):
+    def send_wifi_password(self, user_id):
         """Send to the user the wifi_password beacon
 
             Send a beacon with the wifi password to
@@ -85,7 +85,9 @@ class SmartCore(SmartObject):
         }
         #print("**** HelloBroadcastACK received, sending WiFi pswd ****")
         self.beacon.le_set_wifi_password_broadcast(adv_data, enc_params)
-        # After the advertising time, need to rebroadcast the hello
+
+    def restore_hellobroadcast(self, adv_time=0.6):
+        """restore hellobroadcast send on the air after :adv_time"""
         t = Timer(adv_time, self.send_hellobroadcast)
         t.start()
 
@@ -120,6 +122,9 @@ class SmartCore(SmartObject):
                 self.send_wifi_password(user_id)
                 self.new_password()
                 self.new_partial_iv()
+                # After the advertising time, need to rebroadcast the helloBroadcast
+                # Note, call this AFTER changing the partial_iv
+                self.restore_hellobroadcast()
                 is_ack = True
         return is_ack
 
