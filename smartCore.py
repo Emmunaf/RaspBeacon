@@ -58,8 +58,12 @@ class SmartCore(SmartObject):
         
         psk = self.generate_new_psk_str()
         self.wifi_psk = psk.encode("utf-8")
-        self.hostapd.change_wifi_password(psk)
-        # TODO: CHANGE WIFI PASSWORD
+        # Wait a some seconds so the user can connect to wifi 
+        # To download some configuration data
+        #self.hostapd.change_wifi_password(psk)
+        wait_time = 30
+        t = Timer(wait_time, self.hostapd.change_wifi_password, args=(psk, ))
+        t.start()
 
     def change_wifi_password(self, psk):
         # The root permission are needed to edit conf. file
