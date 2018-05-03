@@ -112,6 +112,7 @@ class HostapdHandler():
             sys.stdout.write(line)  # same for print?
             #Dont print anything inside the for or it will be
             # written ti config file
+        print("Changing pswd to:"+str(psk))
         if restart:
             self.restart_hostapd()
         
