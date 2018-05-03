@@ -26,9 +26,8 @@ class HostapdHandler():
         #NOTE: be carefull in future multithreading support
         min_interval = 2.8  # By default a value of 3 secs should be ok
         current_time = time.time()
-        a= current_time - self.last_restart_time + min_interval
-        print("sleeping for"+str(a))
-        return current_time - self.last_restart_time + min_interval
+        remaining_time = current_time - self.last_restart_time + min_interval
+        return remaining_time
         
 
     def check_hostapd_status(self):
