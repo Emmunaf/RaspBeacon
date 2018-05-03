@@ -15,7 +15,6 @@ class HostapdHandler():
         self.wlan_device = wlan_device
         self.hostapd_conf_path = hostapd_conf_path
         self.change_wifi_ssid(init_ssid)
-        self.restart_hostapd()
 
     def restart_min_interval(self):
         """Return the minimum time (sec) to wait for the next restart.
