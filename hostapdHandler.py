@@ -26,6 +26,8 @@ class HostapdHandler():
         #NOTE: be carefull in future multithreading support
         min_interval = 2.8  # By default a value of 3 secs should be ok
         current_time = time.time()
+        a= current_time - self.last_restart_time + min_interval
+        print("sleeping for"+str(a))
         return current_time - self.last_restart_time + min_interval
         
 
@@ -70,7 +72,7 @@ class HostapdHandler():
         return rstatus == 0
         
 
-    def change_wifi_visibility(self, stealth = True):
+    def change_wifi_visibility(self, stealth = True, restart=True):
         """Edit the hostapd config file and restart the service"""
 
         write_char = str(int(stealth))  # 1 if stealth=true
@@ -82,9 +84,10 @@ class HostapdHandler():
             sys.stdout.write(line)  # same for print?
             #Dont print anything inside the for or it will be
             # written to config file
-        self.restart_hostapd()
+        if restart:
+            self.restart_hostapd()
 
-    def change_wifi_password(self, psk):
+    def change_wifi_password(self, psk, restart=True):
         """Edit the hostapd config file and restart the service"""
 
         #Edit the config file.
@@ -96,9 +99,10 @@ class HostapdHandler():
             sys.stdout.write(line)  # same for print?
             #Dont print anything inside the for or it will be
             # written ti config file
-        self.restart_hostapd()
+        if restart:
+            self.restart_hostapd()
         
-    def change_wifi_ssid(self, ssid):
+    def change_wifi_ssid(self, ssid, restart=True):
         """Edit the hostapd config file and restart the service"""
 
         #nano /etc/hostapd/hostapd.conf
@@ -118,7 +122,8 @@ class HostapdHandler():
             sys.stdout.write(line)  # same for print?
         #Dont print anything inside the for or it will be
         # written ti config file
-        self.restart_hostapd()
+        if restart:
+            self.restart_hostapd()
 
 #change_wifi_password("wlan0", "abcdefghilmnopa")
 #change_wifi_ssid("wlan0", "Testa")
