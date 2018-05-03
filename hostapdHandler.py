@@ -29,7 +29,7 @@ class HostapdHandler():
         #NOTE: be carefull in future multithreading support
         min_interval = 3  # By default a value of 3 secs should be ok
         current_time = time.time()
-        remaining_time = current_time - (self.last_restart_time + min_interval)
+        remaining_time = min_interval - (current_time - self.last_restart_time)
         print("Restarting time:"+str(remaining_time))
         return remaining_time
         
