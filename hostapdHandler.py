@@ -72,7 +72,7 @@ class HostapdHandler():
         self.waiting_restart = False
         return rstatus == 0
 
-    def restart_hostapd(self):
+    def restart_hostapd(self, wait_time=0):
         """Always call this after updating the hostapd config file.
         
         return True if restart service is successful
@@ -83,18 +83,19 @@ class HostapdHandler():
         except HostapdException as e:
             print(e)  # TODO:log
         # 
-        wait_time = self.get_restart_min_interval()
-        print("Wait time: "+str(wait_time))
+        min_wait_time = self.get_restart_min_interval()
+        print("Wait time arg: "+str(wait_time))
         if not self.waiting_restart:  
             #TODO: avoid double call, use self.timer
-            if wait_time > 0:
+            if min_wait_time > 0 and min_wait_time > wait_time:
                 # Wait if the time between now and the last restart is < min_interval
                 self.waiting_restart = True
                 print("Calling the hostapd_restart_cmd")
-                t = threading.Timer(wait_time, self.hostapd_restart_cmd)
+                t = threading.Timer(min_wait_time, self.hostapd_restart_cmd)
                 t.start()
             else:
-                self.hostapd_restart_cmd()
+                t = threading.Timer(wait_time, self.hostapd_restart_cmd)
+                t.start()
         return True
         
         
@@ -128,7 +129,7 @@ class HostapdHandler():
             # written ti config file
         print("Changing pswd to:"+str(psk))
         if restart:
-            self.restart_hostapd()
+            self.restart_hostapd(30)
         
     def change_wifi_ssid(self, ssid, restart=True):
         """Edit the hostapd config file and restart the service"""
