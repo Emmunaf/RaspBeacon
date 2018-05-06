@@ -77,16 +77,19 @@ class HostapdHandler():
         
         return True if restart service is successful
         """
+        print("Restart hostapd called")
         try:
             hostapd_status = self.check_hostapd_status()
         except HostapdException as e:
             print(e)  # TODO:log
         # 
         wait_time = self.get_restart_min_interval()
+        print("Wait time: "+str(wait_time))
         if wait_time > 0 and not self.waiting_restart:  
             #TODO: avoid double call, use self.timer
             # Wait if the time between now and the last restart is < min_interval
             self.waiting_restart = True
+            print("Calling the hostapd_restart_cmd")
             t = threading.Timer(wait_time, self.hostapd_restart_cmd)
             t.start()
         return True
