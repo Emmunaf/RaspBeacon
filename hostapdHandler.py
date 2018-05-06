@@ -60,7 +60,6 @@ class HostapdHandler():
     def hostapd_restart_cmd(self):
         """Execute hostapd service restart cmd"""
 
-        print("AAAAAAAAAAAA")
         #Restarting doesnt work when changing pswd on the fly, need stop and start
         # rstatus = subprocess.call("service hostapd restart", shell=True)
         rstatus = subprocess.call("service hostapd stop", shell=True)
@@ -87,13 +86,14 @@ class HostapdHandler():
         print("Wait time arg: "+str(wait_time))
         if not self.waiting_restart:  
             #TODO: avoid double call, use self.timer
+            self.waiting_restart = True
             if min_wait_time > 0 and min_wait_time > wait_time:
                 # Wait if the time between now and the last restart is < min_interval
-                self.waiting_restart = True
                 print("Calling the hostapd_restart_cmd")
                 t = threading.Timer(min_wait_time, self.hostapd_restart_cmd)
                 t.start()
             else:
+                print("Calling the hostapd_restart_cmd in "+str(wait_time))
                 t = threading.Timer(wait_time, self.hostapd_restart_cmd)
                 t.start()
         return True
