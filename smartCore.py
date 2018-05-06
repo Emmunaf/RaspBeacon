@@ -32,7 +32,8 @@ class SmartCore(SmartObject):
         self.hostapd = HostapdHandler(wlan_device)
         self.wlan_device = wlan_device
         self.new_partial_iv()
-        self.new_password()
+        self.new_password(restart=False)
+        self.hostapd.restart_hostapd()
         #self.change_wifi_visibility(stealth=True)  # Hidden AP
 
     def new_partial_iv(self):
@@ -49,7 +50,7 @@ class SmartCore(SmartObject):
             psk += chars[ord(BeaconPi.generate_random_bytes(1)) % len(chars)]
         return psk
 
-    def new_password(self):
+    def new_password(self, restart=True):
         """Generate a new password composed by 16 characters
         
         After calling this method the password, encoded in 
@@ -61,9 +62,10 @@ class SmartCore(SmartObject):
         # Wait a some seconds so the user can connect to wifi 
         # To download some configuration data
         #self.hostapd.change_wifi_password(psk)
-        wait_time = 30
-        t = Timer(wait_time, self.hostapd.change_wifi_password, args=(psk, ))
-        t.start()
+        #wait_time = 30
+        #t = Timer(wait_time, self.hostapd.change_wifi_password, args=(psk, ))
+        #t.start()
+        self.hostapd.change_wifi_password(psk, restart)
 
     def change_wifi_password(self, psk):
         # The root permission are needed to edit conf. file
