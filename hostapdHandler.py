@@ -30,7 +30,7 @@ class HostapdHandler():
         min_interval = 3  # By default a value of 3 secs should be ok
         current_time = time.time()
         remaining_time = min_interval - (current_time - self.last_restart_time)
-        print("Restarting time:"+str(remaining_time))
+        print("Sec to wait until restart:"+str(remaining_time))
         return remaining_time
         
 
@@ -60,6 +60,7 @@ class HostapdHandler():
     def hostapd_restart_cmd(self):
         """Execute hostapd service restart cmd"""
 
+        print("AAAAAAAAAAAA")
         #Restarting doesnt work when changing pswd on the fly, need stop and start
         # rstatus = subprocess.call("service hostapd restart", shell=True)
         rstatus = subprocess.call("service hostapd stop", shell=True)
