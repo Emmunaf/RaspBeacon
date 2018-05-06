@@ -59,7 +59,12 @@ class HostapdHandler():
 
     def hostapd_restart_cmd(self):
         """Execute hostapd service restart cmd"""
-        rstatus = subprocess.call("service hostapd restart", shell=True)
+
+        #Restarting doesnt work when changing pswd on the fly, need stop and start
+        # rstatus = subprocess.call("service hostapd restart", shell=True)
+        rstatus = subprocess.call("service hostapd stop", shell=True)
+        time.sleep(0.75)
+        rstatus = subprocess.call("service hostapd start", shell=True)
         self.last_restart_time = time.time()
         self.waiting_restart = False
         return rstatus == 0
@@ -72,7 +77,7 @@ class HostapdHandler():
         try:
             hostapd_status = self.check_hostapd_status()
         except HostapdException as e:
-            print(e)
+            print(e)  # TODO:log
         # 
         wait_time = self.get_restart_min_interval()
         if wait_time > 0 and not self.waiting_restart:  
