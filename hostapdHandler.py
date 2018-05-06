@@ -66,6 +66,7 @@ class HostapdHandler():
         time.sleep(2)
         rstatus = subprocess.call("service hostapd start", shell=True)
         self.last_restart_time = time.time()
+        print("Restarted, new time:"+str(self.last_restart_time))
         self.waiting_restart = False
         return rstatus == 0
 
