@@ -63,7 +63,7 @@ class HostapdHandler():
         #Restarting doesnt work when changing pswd on the fly, need stop and start
         # rstatus = subprocess.call("service hostapd restart", shell=True)
         rstatus = subprocess.call("service hostapd stop", shell=True)
-        time.sleep(0.75)
+        time.sleep(2)
         rstatus = subprocess.call("service hostapd start", shell=True)
         self.last_restart_time = time.time()
         self.waiting_restart = False
