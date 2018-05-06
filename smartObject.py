@@ -10,7 +10,14 @@ import smartbeacon_command
 
 #atexit.register, ctrlBeacon
 class SmartObject(object):
-    """A class used for handling SmartObjects"""
+    """Class used for handling SmartObjects
+
+        Internal attributes:
+        object_id - number of the hci to use (ex. 0 or 1)[INT]
+        iv - the iv ready to use for the next communication        
+        wifi_psk - the wifi password of the current AP (bytes, utf-8 encoded)
+        wlan_device - the device used for the current wlan AP (ex. wlan0, mon0)
+    """
 
     def __init__(self, object_id=-1, hci_device=0):
         if os.getuid() != 0:

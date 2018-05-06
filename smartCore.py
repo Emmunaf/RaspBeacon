@@ -90,7 +90,7 @@ class SmartCore(SmartObject):
         #print("**** HelloBroadcastACK received, sending WiFi pswd ****")
         self.beacon.le_set_wifi_password_broadcast(adv_data, enc_params)
 
-    def restore_hellobroadcast(self, adv_time=0.6):
+    def restore_hellobroadcast(self, adv_time=0.7):
         """restore hellobroadcast send on the air after :adv_time"""
         t = Timer(adv_time, self.send_hellobroadcast)
         t.start()
@@ -101,7 +101,7 @@ class SmartCore(SmartObject):
             "obj_id": self.object_id}
         self.iv = self.beacon.le_set_hello_broadcast(adv_data)
         print("*** Sending HelloBroadcast: ****")
-        print(self.iv)
+        print(self.iv)  #DEBUG
 
     def check_for_hello_ack(self, report):
         """Check and do some action if an HelloBroadcast is received

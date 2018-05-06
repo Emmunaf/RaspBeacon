@@ -64,6 +64,7 @@ class HostapdHandler():
         # rstatus = subprocess.call("service hostapd restart", shell=True)
         rstatus = subprocess.call("service hostapd stop", shell=True)
         time.sleep(2)
+        print("Just had a rest after stopping hostapd")
         rstatus = subprocess.call("service hostapd start", shell=True)
         self.last_restart_time = time.time()
         print("Restarted, new time:"+str(self.last_restart_time))
