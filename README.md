@@ -31,13 +31,12 @@ $ python3 setup.py install
 
 ##### Second one
 Flash a dd image with bluez already set up.
-Link: 
+Link: https://mega.nz/#!XUcgXQZY!foqC2FuKQmW3fZZeupTImAdK3za1n-6_R4zP2onNRS4
 
 
 ### Todos
 
  - Write MORE Tests
- - Add Night Mode
 
 License
 ----
