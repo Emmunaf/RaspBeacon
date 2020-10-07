@@ -37,9 +37,13 @@ $ python3 setup.py install
 
 ##### Second (easy) method
 Flash a dd image with bluez already set up.
+
 Link: https://mega.nz/#!XUcgXQZY!foqC2FuKQmW3fZZeupTImAdK3za1n-6_R4zP2onNRS4
 
-
+Assuming the file is renamed in backup_dd.img and the uSD you want to flash is reachable at /dev/rdiskX, run dd to flash the image.
+```sh
+$ sudo dd bs=4m if=backup_dd.img of=/dev/rdiskX conv=noerror,sync
+```
 ### Todos
 
  - Write MORE Tests
