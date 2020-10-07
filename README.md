@@ -1,8 +1,14 @@
 # BeaconPi
-BeaconPi is a python project.
+BeaconPi is a python project that implements the CtrlBeacon protocol.
+The protocol aims to have many peculiarities. Some of there are:
+1. No internet is required.
+2. Really low latency.
+3. Fault tollerant.
+4. Privacy and security improves.
 
-  - ...
-# Dipendencies 
+If you want to learn more about the protocols here there is [my first thesis that's all about it](./thesis.pdf)!
+
+# Dependencies 
 
   - Python > 3.4
   - Bluez library 
@@ -14,8 +20,8 @@ You should also have the following requirements:
 
 ### Installation
 
-Dillinger requires the BlueZ library to run, installing it on a raspberry could be very annoying. You can choose to way:
-##### First one
+Dillinger requires the BlueZ library to run, installing it on a raspberry could be very annoying. You can choose two ways:
+##### First (hard) method
 Download and compile last version of boost available.
 Download the [Gattlib library] library then you need to modify the setup.py script in order to work with python != 3.4.
 In order to do that you can execute the following commands and replace "boost_python-py35" with "boost_python-py<your_version>", where <your_version> = <35|36|..>
@@ -29,7 +35,7 @@ $ sed -ie 's/boost_python-py34/boost_python-py35/' setup.py
 $ python3 setup.py install 
 ```
 
-##### Second one
+##### Second (easy) method
 Flash a dd image with bluez already set up.
 Link: https://mega.nz/#!XUcgXQZY!foqC2FuKQmW3fZZeupTImAdK3za1n-6_R4zP2onNRS4
 
@@ -37,6 +43,9 @@ Link: https://mega.nz/#!XUcgXQZY!foqC2FuKQmW3fZZeupTImAdK3za1n-6_R4zP2onNRS4
 ### Todos
 
  - Write MORE Tests
+ - Improve code
+ - Add different packets and commands
+ 
 
 License
 ----
